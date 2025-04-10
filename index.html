@@ -24,7 +24,32 @@
   </head>
 <body>
 <script type="module">
-  import { connectWalletAndMintPrize } from './wallet.js';
+  const CONTRACT_ADDRESS = "0x7eFC729a41FC7073dE028712b0FB3950F735f9ca";
+  const ABI = [
+    "function mintPrize() public"
+  ];
+
+  async function connectWalletAndMintPrize() {
+    if (typeof window.ethereum === 'undefined') {
+      alert('Please install MetaMask or a Web3 wallet.');
+      return;
+    }
+
+    try {
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+
+      const tx = await contract.mintPrize();
+      await tx.wait();
+
+      alert("NFT Minted Successfully!");
+    } catch (error) {
+      console.error(error);
+      alert("Minting failed: " + (error.message || error));
+    }
+  }
 
   const config = {
     type: Phaser.AUTO,
