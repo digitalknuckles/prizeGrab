@@ -6,7 +6,6 @@
     <title>FunFart Grab (Web Version)</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.85.2/dist/phaser.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-    <script src="walletConnect.js"></script>
     <style>
       body { margin: 0; padding: 0; overflow: hidden; background: black; }
       canvas { display: block; margin: auto; }
@@ -24,7 +23,9 @@
     </style>
   </head>
 <body>
-<script>
+<script type="module">
+  import { connectWalletAndMintPrize } from './wallet.js';
+
   const config = {
     type: Phaser.AUTO,
     width: 800,
@@ -193,21 +194,7 @@
       fontSize: '28px', backgroundColor: '#ccc', color: '#000', padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive().setDepth(22);
 
-    mintPrizeButton.on('pointerdown', async () => {
-      try {
-        if (!window.ethereum) return alert("MetaMask required");
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        const signer = provider.getSigner();
-        const contract = new ethers.Contract("0x7eFC729a41FC7073dE028712b0FB3950F735f9ca", ["function mintPrize() public"], signer);
-        const tx = await contract.mintPrize();
-        await tx.wait();
-        alert("🎉 Prize minted successfully!");
-      } catch (err) {
-        console.error(err);
-        alert("Minting failed. See console for details.");
-      }
-    });
+    mintPrizeButton.on('pointerdown', connectWalletAndMintPrize);
 
     mintNFTButton.on('pointerdown', () => {
       window.open("https://opensea.io/collection/heartbones", "_blank");
