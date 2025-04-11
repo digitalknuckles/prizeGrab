@@ -206,80 +206,28 @@
     fallingGroup.clear(true, true);
   }
 
-function showVictoryScreen(scene) {
-  if (!scene || typeof scene.add !== 'function') {
-    console.error('Invalid Phaser scene context in showVictoryScreen.');
-    return;
-  }
+  function showVictoryScreen() {
+    victory = true;
+    this.add.image(400, 300, 'victoryBg').setDepth(21);
+    this.add.text(400, 150, 'You Win!', { fontSize: '64px', color: '#fff' }).setOrigin(0.5).setDepth(22);
 
-  victory = true;
+    const mintPrizeButton = this.add.text(400, 240, 'Mint Prize', {
+      fontSize: '28px', backgroundColor: '#ff0', color: '#000', padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setInteractive().setDepth(22);
 
-  // Only try to add image if it's loaded
-  if (scene.textures.exists('victoryBg')) {
-    const victoryBg = scene.add.image(400, 300, 'victoryBg')
-      .setDepth(20)
-      .setAlpha(1);
-    // Don't block interaction
-    victoryBg.input?.enabled && (victoryBg.input.enabled = false);
-  } else {
-    console.warn("victoryBg image not found in cache.");
-  }
+    const mintNFTButton = this.add.text(400, 300, 'Mint NFT', {
+      fontSize: '32px', backgroundColor: '#fff', color: '#000', padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setInteractive().setDepth(22);
 
-  // Text: You Win
-  scene.add.text(400, 150, 'You Win!', {
-    fontSize: '64px',
-    color: '#ffffff',
-    fontFamily: 'Arial',
-    stroke: '#000',
-    strokeThickness: 6,
-  }).setOrigin(0.5).setDepth(21);
+    const restartButton = this.add.text(400, 360, 'Restart', {
+      fontSize: '28px', backgroundColor: '#ccc', color: '#000', padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setInteractive().setDepth(22);
 
-  // Button: Mint Prize
-  const mintPrizeButton = scene.add.text(400, 240, 'Mint Prize', {
-    fontSize: '28px',
-    backgroundColor: '#ffff00',
-    color: '#000000',
-    padding: { x: 10, y: 5 },
-    fontFamily: 'Arial',
-  }).setOrigin(0.5).setInteractive().setDepth(22);
-
-  // Button: Mint NFT (external link)
-  const mintNFTButton = scene.add.text(400, 300, 'Mint NFT', {
-    fontSize: '32px',
-    backgroundColor: '#ffffff',
-    color: '#000000',
-    padding: { x: 10, y: 5 },
-    fontFamily: 'Arial',
-  }).setOrigin(0.5).setInteractive().setDepth(22);
-
-  // Button: Restart Game
-  const restartButton = scene.add.text(400, 360, 'Restart', {
-    fontSize: '28px',
-    backgroundColor: '#cccccc',
-    color: '#000000',
-    padding: { x: 10, y: 5 },
-    fontFamily: 'Arial',
-  }).setOrigin(0.5).setInteractive().setDepth(22);
-
-  // Interaction
-  mintPrizeButton.on('pointerdown', () => {
-    try {
-      window.mintPrizeNFT();
-    } catch (err) {
-      console.error('Minting error:', err);
-      alert("Minting failed: " + (err.message || err));    }
-  });
-
-  // Open OpenSea
-  mintNFTButton.on('pointerdown', () => {
-    window.open("https://opensea.io/collection/heartbones", "_blank");
-  });
-
-  // Reload the game
-  restartButton.on('pointerdown', () => {
-    window.location.reload();
-  });
-}      });
+    mintPrizeButton.on('pointerdown', () => {
+      window.mintPrizeNFT().catch((err) => {
+        console.error(err);
+        alert("Minting failed: " + (err.message || err));
+      });
     });
 
     mintNFTButton.on('pointerdown', () => window.open("https://opensea.io/collection/heartbones", "_blank"));
