@@ -96,8 +96,10 @@
 
   function create() {
     this.add.image(400, 300, 'background');
+    this.input.addPointer(2); // Ensures touch/multi-touch
     prizeGroup = this.physics.add.group();
     fallingGroup = this.physics.add.group();
+    
 
     for (let x = 200; x < 600; x += 150) {
       const prize = this.physics.add.image(x, 550, 'prize').setImmovable(true);
