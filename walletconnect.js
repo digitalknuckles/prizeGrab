@@ -1,34 +1,39 @@
-// walletConnect.js
 import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.esm.min.js";
-import EthereumProvider from "@walletconnect/ethereum-provider";
+import { EthereumClient, w3mConnectors, w3mProvider } from "@web3modal/ethereum";
+import { Web3Modal } from "@web3modal/html";
+
+// --- WalletConnect AppKit Configuration ---
+const projectId = "15da3c431a74b29edb63198a503d45b5";
+const chains = [1, 137]; // Ethereum Mainnet, Polygon (customize as needed)
+
+const metadata = {
+  name: "FunFart Grab",
+  description: "Mint NFTs after winning the game!",
+  url: "https://yourgameurl.com",
+  icons: ["https://yourgameurl.com/icon.png"]
+};
+
+// Init WalletConnect Modal
+const ethereumClient = new EthereumClient(w3mProvider({ chains }), chains);
+const web3Modal = new Web3Modal({ projectId, themeMode: "light", themeColor: "purple", metadata }, ethereumClient);
 
 const CONTRACT_ADDRESS = "0x7eFC729a41FC7073dE028712b0FB3950F735f9ca";
 const CONTRACT_ABI = [
   "function mintPrize() public"
 ];
 
-let provider;
-
 export async function connectWallet() {
   try {
-    provider = await EthereumProvider.init({
-      projectId: "YOUR_WALLETCONNECT_PROJECT_ID", // 🔑 You need to register at WalletConnect Cloud
-      chains: [137], // Polygon Mainnet (use 80001 for Mumbai testnet)
-      showQrModal: true,
-    });
-
-    await provider.enable();
-
-    const web3Provider = new ethers.providers.Web3Provider(provider);
+    const provider = await web3Modal.openModal(); // opens QR modal if not connected
+    const web3Provider = new ethers.providers.Web3Provider(window.ethereum);
+    await web3Provider.send("eth_requestAccounts", []);
     const signer = web3Provider.getSigner();
     const address = await signer.getAddress();
-
-    console.log("🔗 WalletConnect Connected:", address);
+    console.log("🔌 Wallet connected:", address);
     return { provider: web3Provider, signer, address };
-
-  } catch (err) {
-    console.error("❌ WalletConnect connection failed:", err);
-    alert("WalletConnect connection failed.");
+  } catch (error) {
+    console.error("Connection failed:", error);
+    alert("Failed to connect wallet.");
     return null;
   }
 }
@@ -43,7 +48,7 @@ export async function mintPrizeNFT() {
     await tx.wait();
     alert("🎉 NFT Minted Successfully!");
   } catch (error) {
-    console.error("❌ Minting error:", error);
+    console.error("Minting error:", error);
     alert("Minting failed: " + (error.message || error));
   }
 }
