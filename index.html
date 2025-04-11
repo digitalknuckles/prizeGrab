@@ -1,61 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FunFart Grab (Web Version)</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.85.2/dist/phaser.js"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-    <style>
-      body { margin: 0; padding: 0; overflow: hidden; background: black; }
-      canvas { display: block; margin: auto; }
-      #quitPopup button {
-        background-color: #444;
-        color: white;
-        padding: 10px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-      #quitPopup button:hover {
-        background-color: #444;
-      }
-    </style>
-  </head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FunFart Grab (Web Version)</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.85.2/dist/phaser.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <style>
+    body { margin: 0; padding: 0; overflow: hidden; background: black; }
+    canvas { display: block; margin: auto; }
+    #quitPopup button {
+      background-color: #444;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #quitPopup button:hover {
+      background-color: #666;
+    }
+  </style>
+</head>
 <body>
+
 <script type="module">
-  const CONTRACT_ADDRESS = "0x7eFC729a41FC7073dE028712b0FB3950F735f9ca";
-  const ABI = [
-    "function mintPrize() public"
-  ];
-
-async function connectWalletAndMintPrize() {
-  try {
-    await mintPrizeNFT();
-  } catch (err) {
-    console.error('Error minting NFT:', err);
-    alert("Minting failed: " + (err.message || err));
-  }
-}
-      return;
-    }
-
-    try {
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-
-      const tx = await contract.mintPrize();
-      await tx.wait();
-
-      alert("NFT Minted Successfully!");
-    } catch (error) {
-      console.error(error);
-      alert("Minting failed: " + (error.message || error));
-    }
-  }
+  import { mintPrizeNFT } from './walletConnect.js';
 
   const config = {
     type: Phaser.AUTO,
@@ -83,6 +53,15 @@ async function connectWalletAndMintPrize() {
   let attachedPrize = null, moveLeft = false, moveRight = false;
   let startMenuImage, quitPopup;
 
+  async function connectWalletAndMintPrize() {
+    try {
+      await mintPrizeNFT(); // WalletConnect handler
+    } catch (err) {
+      console.error(err);
+      alert("Minting failed: " + (err.message || err));
+    }
+  }
+
   function preload() {
     this.load.image('background', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeic345u2ts5tz3u3xcguldwnlg3ye5wzl6o6vew7gnf6mh3du3xpnu');
     this.load.image('claw', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreicph5dqmvlsxvn7kbpd3ipf3qaul7sunbm3zhbx5tvf3ofgecljsq');
@@ -96,7 +75,6 @@ async function connectWalletAndMintPrize() {
 
   function create() {
     this.add.image(400, 300, 'background');
-
     prizeGroup = this.physics.add.group();
     fallingGroup = this.physics.add.group();
 
@@ -110,7 +88,6 @@ async function connectWalletAndMintPrize() {
     claw = this.add.image(400, 50, 'claw').setDepth(2);
     clawHitbox = this.physics.add.image(400, 50).setImmovable(true).setVisible(false);
     clawHitbox.body.setSize(20, 40).setOffset(-10, -20);
-
     overlay = this.add.image(400, 300, 'overlay_idle').setDepth(3);
 
     if (!prizeBox || !prizeBox.body) {
@@ -183,9 +160,7 @@ async function connectWalletAndMintPrize() {
     } else if (clawRetracting) {
       claw.y -= 3;
       clawHitbox.y -= 3;
-      if (claw.y <= 50) {
-        clawRetracting = false;
-      }
+      if (claw.y <= 50) clawRetracting = false;
     }
 
     if (holdingObject && attachedPrize) {
@@ -226,11 +201,7 @@ async function connectWalletAndMintPrize() {
     }).setOrigin(0.5).setInteractive().setDepth(22);
 
     mintPrizeButton.on('pointerdown', connectWalletAndMintPrize);
-
-    mintNFTButton.on('pointerdown', () => {
-      window.open("https://opensea.io/collection/heartbones", "_blank");
-    });
-
+    mintNFTButton.on('pointerdown', () => window.open("https://opensea.io/collection/heartbones", "_blank"));
     restartButton.on('pointerdown', () => window.location.reload());
   }
 
