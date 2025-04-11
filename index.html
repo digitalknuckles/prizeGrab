@@ -30,9 +30,12 @@
     "function mintPrize() public"
   ];
 
+  import { mintPrizeNFT } from './walletConnect.js';
+
+  // This function is called when the "Mint Prize" button is clicked
   async function connectWalletAndMintPrize() {
-    if (typeof window.ethereum === 'undefined') {
-      alert('Please install MetaMask or a Web3 wallet.');
+    await mintPrizeNFT();
+  }
       return;
     }
 
