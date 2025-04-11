@@ -206,18 +206,27 @@
     fallingGroup.clear(true, true);
   }
 
-function showVictoryScreen() {
+function showVictoryScreen(scene) {
+  if (!scene || typeof scene.add !== 'function') {
+    console.error('Invalid Phaser scene context in showVictoryScreen.');
+    return;
+  }
+
   victory = true;
 
-  // Add background and disable interaction blocking
-  const victoryBg = this.add.image(400, 300, 'victoryBg')
-    .setDepth(20)
-    .setInteractive()
-    .setAlpha(1);
-  victoryBg.input.enabled = false;
+  // Only try to add image if it's loaded
+  if (scene.textures.exists('victoryBg')) {
+    const victoryBg = scene.add.image(400, 300, 'victoryBg')
+      .setDepth(20)
+      .setAlpha(1);
+    // Don't block interaction
+    victoryBg.input?.enabled && (victoryBg.input.enabled = false);
+  } else {
+    console.warn("victoryBg image not found in cache.");
+  }
 
-  // Add win text
-  const winText = this.add.text(400, 150, 'You Win!', {
+  // Text: You Win
+  scene.add.text(400, 150, 'You Win!', {
     fontSize: '64px',
     color: '#ffffff',
     fontFamily: 'Arial',
@@ -225,8 +234,8 @@ function showVictoryScreen() {
     strokeThickness: 6,
   }).setOrigin(0.5).setDepth(21);
 
-  // Mint Prize Button
-  const mintPrizeButton = this.add.text(400, 240, 'Mint Prize', {
+  // Button: Mint Prize
+  const mintPrizeButton = scene.add.text(400, 240, 'Mint Prize', {
     fontSize: '28px',
     backgroundColor: '#ffff00',
     color: '#000000',
@@ -234,8 +243,8 @@ function showVictoryScreen() {
     fontFamily: 'Arial',
   }).setOrigin(0.5).setInteractive().setDepth(22);
 
-  // Mint NFT Button
-  const mintNFTButton = this.add.text(400, 300, 'Mint NFT', {
+  // Button: Mint NFT (external link)
+  const mintNFTButton = scene.add.text(400, 300, 'Mint NFT', {
     fontSize: '32px',
     backgroundColor: '#ffffff',
     color: '#000000',
@@ -243,8 +252,8 @@ function showVictoryScreen() {
     fontFamily: 'Arial',
   }).setOrigin(0.5).setInteractive().setDepth(22);
 
-  // Restart Button
-  const restartButton = this.add.text(400, 360, 'Restart', {
+  // Button: Restart Game
+  const restartButton = scene.add.text(400, 360, 'Restart', {
     fontSize: '28px',
     backgroundColor: '#cccccc',
     color: '#000000',
@@ -252,14 +261,13 @@ function showVictoryScreen() {
     fontFamily: 'Arial',
   }).setOrigin(0.5).setInteractive().setDepth(22);
 
-  // Mint Prize interaction
+  // Interaction
   mintPrizeButton.on('pointerdown', () => {
     try {
       window.mintPrizeNFT();
     } catch (err) {
       console.error('Minting error:', err);
-      alert("Minting failed: " + (err.message || err));
-    }
+      alert("Minting failed: " + (err.message || err));    }
   });
 
   // Open OpenSea
