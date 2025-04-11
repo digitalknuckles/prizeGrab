@@ -4,265 +4,142 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FunFart Grab (Web Version)</title>
-
-  <!-- External Libraries -->
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.85.2/dist/phaser.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-  <script src="https://unpkg.com/@walletconnect/modal@2/dist/index.umd.js"></script>
-  <script src="walletConnect.js" type="module"></script>
-
-  <!-- Styles -->
   <style>
     body {
       margin: 0;
-      padding: 0;
+      background: #222;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    #game-container {
+      width: 100vw;
+      height: 100vh;
       overflow: hidden;
-      background: black;
-    }
-    canvas {
-      display: block;
-      margin: auto;
-    }
-    #quitPopup {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: #222;
-      color: white;
-      padding: 20px;
-      border: 2px solid #fff;
-      z-index: 1000;
-    }
-    #quitPopup button {
-      background-color: #444;
-      color: white;
-      padding: 10px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    #quitPopup button:hover {
-      background-color: #666;
     }
   </style>
 </head>
-
 <body>
+  <div id="game-container"></div>
 
-<!-- Expose mintPrizeNFT to global scope -->
-<script type="module">
-  import { mintPrizeNFT } from './walletConnect.js';
-  window.mintPrizeNFT = mintPrizeNFT;
-</script>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+  <script>
+    let victory = false;
 
-<script>
-  let claw, clawHitbox, overlay, overlayLeft, overlayRight, prizeGroup, fallingGroup, prizeBox, victory = false;
-  let clawDropping = false, clawRetracting = false, holdingObject = false;
-  let attachedPrize = null, moveLeft = false, moveRight = false;
-  let startMenuImage, quitPopup;
-
-  const config = {
-    type: Phaser.AUTO,
-    width: 800,
-    height: 600,
-    backgroundColor: '#ffffff',
-    physics: {
-      default: 'arcade',
-      arcade: {
-        gravity: { y: 0 },
-        debug: false
+    const config = {
+      type: Phaser.AUTO,
+      width: 800,
+      height: 600,
+      backgroundColor: '#4488aa',
+      parent: 'game-container',
+      scene: {
+        preload: preload,
+        create: create,
+        update: update,
       }
-    },
-    scene: {
-      preload,
-      create,
-      update
-    }
-  };
+    };
 
-  const game = new Phaser.Game(config);
+    const game = new Phaser.Game(config);
 
-  function preload() {
-    this.load.image('background', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeic345u2ts5tz3u3xcguldwnlg3ye5wzl6o6vew7gnf6mh3du3xpnu');
-    this.load.image('claw', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreicph5dqmvlsxvn7kbpd3ipf3qaul7sunbm3zhbx5tvf3ofgecljsq');
-    this.load.image('prize', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreibyehv3juhhr7jgfblaziguedekj7skpqzndbbvd7xnj7isuxhela');
-    this.load.image('victoryBg', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeie5fzzrljnlnejrhmrqaog3z4edm5hmsncuk4kayj5zyh7edfso5q');
-    this.load.image('overlay_idle', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreie32rhyvbibeer5minlpijbri5puqq36bafszwyjnhc4ozakew3oy');
-    this.load.image('overlay_left', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreig6zkwf6swgewwmwdhuiaualqymbfpbsdc4v3j3m47syg26x3uclq');
-    this.load.image('overlay_right', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreichlj2x2l4ejoyxale7kbfmiszesglm2aftsbdnrchjy4br5q3n2e');
-    this.load.image('startMenu', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreicexx7almk7jkzgd7up4uibqh2n7v6gkmeimbgoslbclc3dsndhhy');
-  }
-
-  function create() {
-    this.add.image(400, 300, 'background');
-    this.input.addPointer(2); // Ensures touch/multi-touch
-    prizeGroup = this.physics.add.group();
-    fallingGroup = this.physics.add.group();
-    
-
-    for (let x = 200; x < 600; x += 150) {
-      const prize = this.physics.add.image(x, 550, 'prize').setImmovable(true);
-      prize.body.setSize(16, 24).setOffset(20, 14);
-      prize.setDepth(1);
-      prizeGroup.add(prize);
+    function preload() {
+      this.load.image('claw', 'claw.png'); // placeholder
+      this.load.image('prize', 'prize.png'); // placeholder
+      this.load.image('victoryBg', 'victory-bg.png'); // placeholder
     }
 
-    claw = this.add.image(400, 50, 'claw').setDepth(2);
-    clawHitbox = this.physics.add.image(400, 50).setImmovable(true).setVisible(false);
-    clawHitbox.body.setSize(20, 40).setOffset(-10, -20);
+    function create() {
+      this.input.addPointer(2); // Ensure touch support
+      this.add.image(400, 300, 'claw');
+      this.prize = this.add.image(400, 500, 'prize').setInteractive();
 
-    overlay = this.add.image(400, 300, 'overlay_idle').setDepth(3);
-
-    if (!prizeBox || !prizeBox.body) {
-      prizeBox = this.add.rectangle(770, 770, 40, 10, 0x00ff00, 0.2);
-      this.physics.add.existing(prizeBox, true);
-    }
-
-    startMenuImage = this.add.image(400, 300, 'startMenu').setDepth(20);
-
-    // Input Handlers
-    this.input.keyboard.on('keydown-LEFT', () => {
-      moveLeft = true;
-      overlay.setTexture('overlay_left');
-    });
-    this.input.keyboard.on('keyup-LEFT', () => {
-      moveLeft = false;
-      overlay.setTexture('overlay_idle');
-    });
-    this.input.keyboard.on('keydown-RIGHT', () => {
-      moveRight = true;
-      overlay.setTexture('overlay_right');
-    });
-    this.input.keyboard.on('keyup-RIGHT', () => {
-      moveRight = false;
-      overlay.setTexture('overlay_idle');
-    });
-    this.input.keyboard.on('keydown-SPACE', () => {
-      if (startMenuImage && startMenuImage.visible) {
-        startMenuImage.setVisible(false);
-        return;
-      }
-      if (!clawDropping && !clawRetracting && !holdingObject) {
-        clawDropping = true;
-      } else if (holdingObject) {
-        fallingGroup.add(attachedPrize);
-        attachedPrize.setVelocityY(300);
-        holdingObject = false;
-        attachedPrize = null;
-      }
-    });
-    this.input.keyboard.on('keydown-ESC', () => {
-      if (!quitPopup) showQuitPopup();
-    });
-  }
-
-  function update() {
-    if (victory) return;
-
-    if (moveLeft && !clawDropping && !clawRetracting) {
-      claw.x = clawHitbox.x = Math.max(50, claw.x - 5);
-    }
-    if (moveRight && !clawDropping && !clawRetracting) {
-      claw.x = clawHitbox.x = Math.min(750, claw.x + 5);
-    }
-
-    if (clawDropping) {
-      claw.y += 4;
-      clawHitbox.y += 4;
-      prizeGroup.children.iterate((prize) => {
-        if (Phaser.Geom.Intersects.RectangleToRectangle(clawHitbox.getBounds(), prize.getBounds())) {
-          attachedPrize = prize;
-          holdingObject = true;
-          clawDropping = false;
-          clawRetracting = true;
+      this.prize.on('pointerup', () => {
+        if (!victory) {
+          showVictoryScreen.call(this);
         }
       });
-      if (claw.y >= 500 && !holdingObject) {
-        clawDropping = false;
-        setTimeout(() => clawRetracting = true, 500);
-      }
-    } else if (clawRetracting) {
-      claw.y -= 3;
-      clawHitbox.y -= 3;
-      if (claw.y <= 50) clawRetracting = false;
     }
 
-    if (holdingObject && attachedPrize) {
-      attachedPrize.x = claw.x;
-      attachedPrize.y = claw.y + 190;
-    }
+    function update() {}
 
-    fallingGroup.children.iterate((prize) => {
-      if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
-        destroyAllPrizes();
-        showVictoryScreen.call(this);
-      } else if (prize.y >= 560) {
-        prize.setVelocityY(0);
-      }
-    });
-  }
+    function showVictoryScreen() {
+      victory = true;
 
-  function destroyAllPrizes() {
-    prizeGroup.clear(true, true);
-    fallingGroup.clear(true, true);
-  }
+      // Background image (set depth below all buttons)
+      const bg = this.add.image(400, 300, 'victoryBg').setDepth(21);
+      bg.disableInteractive(); // Prevents blocking input
 
-function showVictoryScreen() {
-  victory = true;
+      // Victory title
+      this.add.text(400, 150, 'You Win!', {
+        fontSize: '64px',
+        color: '#fff'
+      }).setOrigin(0.5).setDepth(22);
 
-  const bg = this.add.image(400, 300, 'victoryBg').setDepth(21);
+      // Buttons style
+      const textStyle = {
+        fontSize: '28px',
+        backgroundColor: '#ff0',
+        color: '#000',
+        padding: { x: 10, y: 5 }
+      };
 
-  const textStyle = { fontSize: '28px', backgroundColor: '#ff0', color: '#000', padding: { x: 10, y: 5 } };
-  const btnStyle = { fontSize: '32px', backgroundColor: '#fff', color: '#000', padding: { x: 10, y: 5 } };
-  const restartStyle = { fontSize: '28px', backgroundColor: '#ccc', color: '#000', padding: { x: 10, y: 5 } };
+      const btnStyle = {
+        fontSize: '32px',
+        backgroundColor: '#fff',
+        color: '#000',
+        padding: { x: 10, y: 5 }
+      };
 
-  this.add.text(400, 150, 'You Win!', { fontSize: '64px', color: '#fff' }).setOrigin(0.5).setDepth(22);
+      const restartStyle = {
+        fontSize: '28px',
+        backgroundColor: '#ccc',
+        color: '#000',
+        padding: { x: 10, y: 5 }
+      };
 
-  const mintPrizeButton = this.add.text(400, 240, 'Mint Prize', textStyle)
-    .setOrigin(0.5)
-    .setInteractive({ useHandCursor: true })
-    .setDepth(22);
+      // Mint Prize button
+      const mintPrizeButton = this.add.text(400, 240, 'Mint Prize', textStyle)
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true })
+        .setDepth(22);
 
-  const mintNFTButton = this.add.text(400, 300, 'Mint NFT', btnStyle)
-    .setOrigin(0.5)
-    .setInteractive({ useHandCursor: true })
-    .setDepth(22);
-
-  const restartButton = this.add.text(400, 360, 'Restart', restartStyle)
-    .setOrigin(0.5)
-    .setInteractive({ useHandCursor: true })
-    .setDepth(22);
-
-  mintPrizeButton.on('pointerup', () => {
-    console.log("Mint Prize clicked");
-    window.mintPrizeNFT().catch((err) => {
-      console.error(err);
-      alert("Minting failed: " + (err.message || err));
+      mintPrizeButton.on('pointerup', () => {
+        console.log("Mint Prize clicked");
+        if (window.mintPrizeNFT) {
+          window.mintPrizeNFT().catch((err) => {
+            console.error(err);
+            alert("Minting failed: " + (err.message || err));
+          });
+        } else {
+          alert("Mint function not found.");
+        }
       });
-    });
 
-    mintNFTButton.on('pointerdown', () => window.open("https://opensea.io/collection/heartbones", "_blank"));
-    restartButton.on('pointerdown', () => window.location.reload());
-  }
+      // Mint NFT button
+      const mintNFTButton = this.add.text(400, 300, 'Mint NFT', btnStyle)
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true })
+        .setDepth(22);
 
-  function showQuitPopup() {
-    quitPopup = document.createElement('div');
-    quitPopup.id = 'quitPopup';
-    quitPopup.innerHTML = `
-      <p>Are you sure you want to quit?</p>
-      <button id="yesQuit">Yes</button>
-      <button id="noQuit" style="margin-left: 10px;">No</button>
-    `;
-    document.body.appendChild(quitPopup);
+      mintNFTButton.on('pointerup', () => {
+        window.open("https://opensea.io/collection/heartbones", "_blank");
+      });
 
-    document.getElementById('yesQuit').onclick = () => game.destroy(true);
-    document.getElementById('noQuit').onclick = () => {
-      document.body.removeChild(quitPopup);
-      quitPopup = null;
+      // Restart button
+      const restartButton = this.add.text(400, 360, 'Restart', restartStyle)
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true })
+        .setDepth(22);
+
+      restartButton.on('pointerup', () => {
+        window.location.reload();
+      });
+    }
+
+    // Mock global function for testing
+    window.mintPrizeNFT = async function () {
+      alert("Minting your prize! (Mock)");
+      console.log("Mint function triggered.");
     };
-  }
-</script>
-
+  </script>
 </body>
 </html>
