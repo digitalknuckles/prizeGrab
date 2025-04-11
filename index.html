@@ -206,27 +206,37 @@
     fallingGroup.clear(true, true);
   }
 
-  function showVictoryScreen() {
-    victory = true;
-    this.add.image(400, 300, 'victoryBg').setDepth(21);
-    this.add.text(400, 150, 'You Win!', { fontSize: '64px', color: '#fff' }).setOrigin(0.5).setDepth(22);
+function showVictoryScreen() {
+  victory = true;
 
-    const mintPrizeButton = this.add.text(400, 240, 'Mint Prize', {
-      fontSize: '28px', backgroundColor: '#ff0', color: '#000', padding: { x: 10, y: 5 }
-    }).setOrigin(0.5).setInteractive().setDepth(23);
+  const bg = this.add.image(400, 300, 'victoryBg').setDepth(21);
 
-    const mintNFTButton = this.add.text(400, 300, 'Mint NFT', {
-      fontSize: '32px', backgroundColor: '#fff', color: '#000', padding: { x: 10, y: 5 }
-    }).setOrigin(0.5).setInteractive().setDepth(22);
+  const textStyle = { fontSize: '28px', backgroundColor: '#ff0', color: '#000', padding: { x: 10, y: 5 } };
+  const btnStyle = { fontSize: '32px', backgroundColor: '#fff', color: '#000', padding: { x: 10, y: 5 } };
+  const restartStyle = { fontSize: '28px', backgroundColor: '#ccc', color: '#000', padding: { x: 10, y: 5 } };
 
-    const restartButton = this.add.text(400, 360, 'Restart', {
-      fontSize: '28px', backgroundColor: '#ccc', color: '#000', padding: { x: 10, y: 5 }
-    }).setOrigin(0.5).setInteractive().setDepth(22);
+  this.add.text(400, 150, 'You Win!', { fontSize: '64px', color: '#fff' }).setOrigin(0.5).setDepth(22);
 
-    mintPrizeButton.on('pointerdown', () => {
-      window.mintPrizeNFT().catch((err) => {
-        console.error(err);
-        alert("Minting failed: " + (err.message || err));
+  const mintPrizeButton = this.add.text(400, 240, 'Mint Prize', textStyle)
+    .setOrigin(0.5)
+    .setInteractive({ useHandCursor: true })
+    .setDepth(22);
+
+  const mintNFTButton = this.add.text(400, 300, 'Mint NFT', btnStyle)
+    .setOrigin(0.5)
+    .setInteractive({ useHandCursor: true })
+    .setDepth(22);
+
+  const restartButton = this.add.text(400, 360, 'Restart', restartStyle)
+    .setOrigin(0.5)
+    .setInteractive({ useHandCursor: true })
+    .setDepth(22);
+
+  mintPrizeButton.on('pointerup', () => {
+    console.log("Mint Prize clicked");
+    window.mintPrizeNFT().catch((err) => {
+      console.error(err);
+      alert("Minting failed: " + (err.message || err));
       });
     });
 
