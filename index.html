@@ -4,13 +4,36 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FunFart Grab (Web Version)</title>
+
+  <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.85.2/dist/phaser.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <script src="https://unpkg.com/@walletconnect/modal@2/dist/index.umd.js"></script>
   <script src="walletConnect.js" type="module"></script>
+
+  <!-- Styles -->
   <style>
-    body { margin: 0; padding: 0; overflow: hidden; background: black; }
-    canvas { display: block; margin: auto; }
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: black;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+    }
+    #quitPopup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #222;
+      color: white;
+      padding: 20px;
+      border: 2px solid #fff;
+      z-index: 1000;
+    }
     #quitPopup button {
       background-color: #444;
       color: white;
@@ -24,17 +47,16 @@
     }
   </style>
 </head>
+
 <body>
 
-<!-- Load Phaser game logic AFTER modules are available -->
+<!-- Expose mintPrizeNFT to global scope -->
 <script type="module">
   import { mintPrizeNFT } from './walletConnect.js';
-
-  window.mintPrizeNFT = mintPrizeNFT; // Expose to global scope
+  window.mintPrizeNFT = mintPrizeNFT;
 </script>
 
 <script>
-  // Phaser setup here, after walletConnect.js is loaded
   let claw, clawHitbox, overlay, overlayLeft, overlayRight, prizeGroup, fallingGroup, prizeBox, victory = false;
   let clawDropping = false, clawRetracting = false, holdingObject = false;
   let attachedPrize = null, moveLeft = false, moveRight = false;
@@ -87,6 +109,7 @@
     claw = this.add.image(400, 50, 'claw').setDepth(2);
     clawHitbox = this.physics.add.image(400, 50).setImmovable(true).setVisible(false);
     clawHitbox.body.setSize(20, 40).setOffset(-10, -20);
+
     overlay = this.add.image(400, 300, 'overlay_idle').setDepth(3);
 
     if (!prizeBox || !prizeBox.body) {
@@ -96,6 +119,7 @@
 
     startMenuImage = this.add.image(400, 300, 'startMenu').setDepth(20);
 
+    // Input Handlers
     this.input.keyboard.on('keydown-LEFT', () => {
       moveLeft = true;
       overlay.setTexture('overlay_left');
@@ -213,27 +237,20 @@
   function showQuitPopup() {
     quitPopup = document.createElement('div');
     quitPopup.id = 'quitPopup';
-    quitPopup.style.position = 'fixed';
-    quitPopup.style.top = '50%';
-    quitPopup.style.left = '50%';
-    quitPopup.style.transform = 'translate(-50%, -50%)';
-    quitPopup.style.backgroundColor = '#222';
-    quitPopup.style.color = '#fff';
-    quitPopup.style.padding = '20px';
-    quitPopup.style.border = '2px solid #fff';
-    quitPopup.style.zIndex = '1000';
-    quitPopup.innerHTML = '<p>Are you sure you want to quit?</p>';
-    const yesBtn = document.createElement('button');
-    yesBtn.innerText = 'Yes';
-    yesBtn.onclick = () => game.destroy(true);
-    const noBtn = document.createElement('button');
-    noBtn.innerText = 'No';
-    noBtn.style.marginLeft = '10px';
-    noBtn.onclick = () => { document.body.removeChild(quitPopup); quitPopup = null; };
-    quitPopup.appendChild(yesBtn);
-    quitPopup.appendChild(noBtn);
+    quitPopup.innerHTML = `
+      <p>Are you sure you want to quit?</p>
+      <button id="yesQuit">Yes</button>
+      <button id="noQuit" style="margin-left: 10px;">No</button>
+    `;
     document.body.appendChild(quitPopup);
+
+    document.getElementById('yesQuit').onclick = () => game.destroy(true);
+    document.getElementById('noQuit').onclick = () => {
+      document.body.removeChild(quitPopup);
+      quitPopup = null;
+    };
   }
 </script>
+
 </body>
 </html>
