@@ -30,12 +30,14 @@
     "function mintPrize() public"
   ];
 
-  import { mintPrizeNFT } from './walletConnect.js';
-
-  // This function is called when the "Mint Prize" button is clicked
-  async function connectWalletAndMintPrize() {
+async function connectWalletAndMintPrize() {
+  try {
     await mintPrizeNFT();
+  } catch (err) {
+    console.error('Error minting NFT:', err);
+    alert("Minting failed: " + (err.message || err));
   }
+}
       return;
     }
 
