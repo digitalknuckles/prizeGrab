@@ -1,18 +1,18 @@
 import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.esm.min.js";
-import { EthereumClient, w3mConnectors, w3mProvider } from "@web3modal/ethereum";
+import { EthereumClient, w3mProvider } from "@web3modal/ethereum";
 import { Web3Modal } from "@web3modal/html";
 
-// --- WalletConnect AppKit Configuration ---
+// --- WalletConnect Configuration ---
 const projectId = "15da3c431a74b29edb63198a503d45b5";
 
 const chains = [
   {
-    id: 1, // Ethereum Mainnet
+    id: 1,
     name: "Ethereum",
-    rpcUrls: ["https://rpc.ankr.com/eth"] // Optional: Replace with your own RPC if needed
+    rpcUrls: ["https://rpc.ankr.com/eth"]
   },
   {
-    id: 137, // Polygon Mainnet
+    id: 137,
     name: "Polygon",
     rpcUrls: ["https://polygon-rpc.com"]
   }
@@ -25,24 +25,31 @@ const metadata = {
   icons: ["https://yourgameurl.com/icon.png"]
 };
 
-// --- Init WalletConnect Modal ---
+// --- Initialize WalletConnect Modal ---
 const ethereumClient = new EthereumClient(w3mProvider({ projectId, chains }), chains);
-const web3Modal = new Web3Modal({ projectId, themeMode: "light", themeColor: "purple", metadata }, ethereumClient);
+const web3Modal = new Web3Modal(
+  { projectId, themeMode: "light", themeColor: "purple", metadata },
+  ethereumClient
+);
 
-// --- Contract Details ---
+// --- Contract Info ---
 const CONTRACT_ADDRESS = "0x7eFC729a41FC7073dE028712b0FB3950F735f9ca";
-const CONTRACT_ABI = [
-  "function mintPrize() public"
-];
+const CONTRACT_ABI = ["function mintPrize() public"];
 
 // --- Connect Wallet ---
 export async function connectWallet() {
   try {
+    // Open modal
     await web3Modal.openModal();
-    await new Promise(resolve => {
-      const checkConnected = setInterval(() => {
-        if (web3Modal.getState().selectedNetworkId) {
-          clearInterval(checkConnected);
+
+    // Wait for provider to become available
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error("Connection timed out")), 15000);
+      const poll = setInterval(() => {
+        const provider = ethereumClient.getProvider();
+        if (provider) {
+          clearTimeout(timeout);
+          clearInterval(poll);
           resolve();
         }
       }, 250);
@@ -57,12 +64,12 @@ export async function connectWallet() {
     return { provider: web3Provider, signer, address };
   } catch (error) {
     console.error("Connection failed:", error);
-    alert("Failed to connect wallet.");
+    alert("❌ Failed to connect wallet.");
     return null;
   }
 }
 
-// --- Mint NFT Function ---
+// --- Mint NFT from Contract ---
 export async function mintPrizeNFT() {
   const wallet = await connectWallet();
   if (!wallet) return;
