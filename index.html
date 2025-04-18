@@ -48,7 +48,7 @@
   let claw, clawHitbox, overlay, overlayLeft, overlayRight, prizeGroup, fallingGroup, prizeBox, victory = false;
   let clawDropping = false, clawRetracting = false, holdingObject = false;
   let attachedPrize = null, moveLeft = false, moveRight = false;
-  let startMenuImage, quitPopup;
+  let startMenuImage, quitPopup, leftButton, rightButton;
 
   function preload() {
     this.load.image('background', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeic345u2ts5tz3u3xcguldwnlg3ye5wzl6o6vew7gnf6mh3du3xpnu');
@@ -69,14 +69,14 @@
 
     for (let x = 200; x < 600; x += 150) {
       const prize = this.physics.add.image(x, 550, 'prize').setImmovable(true);
-      prize.body.setSize(16, 24).setOffset(20, 14); // Smaller hitbox on X axis
+      prize.body.setSize(16, 24).setOffset(20, 14);
       prize.setDepth(1);
       prizeGroup.add(prize);
     }
 
     claw = this.add.image(400, 50, 'claw').setDepth(2);
     clawHitbox = this.physics.add.image(400, 50).setImmovable(true).setVisible(false);
-    clawHitbox.body.setSize(20, 40).setOffset(-10, -20); // Smaller hitbox on X axis
+    clawHitbox.body.setSize(20, 40).setOffset(-10, -20);
 
     overlay = this.add.image(400, 300, 'overlay_idle').setDepth(3);
 
@@ -86,45 +86,82 @@
     }
 
     startMenuImage = this.add.image(400, 300, 'startMenu').setDepth(20);
+    startMenuImage.setInteractive().on('pointerdown', () => {
+      startMenuImage.setVisible(false);
+    });
+
+    // Escape Button (bottom-left)
+    const escButton = this.add.text(10, 560, 'EXIT', {
+      fontSize: '24px', backgroundColor: '#222', color: '#fff', padding: { x: 10, y: 5 }
+    }).setInteractive().setDepth(21);
+    escButton.on('pointerdown', () => {
+      if (!quitPopup) showQuitPopup();
+    });
+
+    // Touch buttons for movement (bottom center)
+    leftButton = this.add.text(300, 520, '< LEFT', {
+      fontSize: '24px', backgroundColor: '#333', color: '#fff', padding: { x: 20, y: 10 }
+    }).setInteractive().setDepth(21);
+    rightButton = this.add.text(420, 520, 'RIGHT >', {
+      fontSize: '24px', backgroundColor: '#333', color: '#fff', padding: { x: 20, y: 10 }
+    }).setInteractive().setDepth(21);
+
+    leftButton.on('pointerdown', () => { moveLeft = true; overlay.setTexture('overlay_left'); });
+    leftButton.on('pointerup', () => { moveLeft = false; overlay.setTexture('overlay_idle'); });
+    rightButton.on('pointerdown', () => { moveRight = true; overlay.setTexture('overlay_right'); });
+    rightButton.on('pointerup', () => { moveRight = false; overlay.setTexture('overlay_idle'); });
+
+    // Mobile drag to move
+    this.input.on('pointermove', (pointer) => {
+      if (!clawDropping && !clawRetracting) {
+        claw.x = Phaser.Math.Clamp(pointer.x, 50, 750);
+        clawHitbox.x = claw.x;
+      }
+    });
 
     this.input.keyboard.on('keydown-LEFT', () => {
       moveLeft = true;
       overlay.setTexture('overlay_left');
     });
-
     this.input.keyboard.on('keyup-LEFT', () => {
       moveLeft = false;
       overlay.setTexture('overlay_idle');
     });
-
     this.input.keyboard.on('keydown-RIGHT', () => {
       moveRight = true;
       overlay.setTexture('overlay_right');
     });
-
     this.input.keyboard.on('keyup-RIGHT', () => {
       moveRight = false;
       overlay.setTexture('overlay_idle');
     });
-
     this.input.keyboard.on('keydown-SPACE', () => {
       if (startMenuImage && startMenuImage.visible) {
         startMenuImage.setVisible(false);
         return;
       }
-      if (!clawDropping && !clawRetracting && !holdingObject) {
-        clawDropping = true;
-      } else if (holdingObject) {
-        fallingGroup.add(attachedPrize);
-        attachedPrize.setVelocityY(300);
-        holdingObject = false;
-        attachedPrize = null;
-      }
+      handleClawAction();
     });
-
     this.input.keyboard.on('keydown-ESC', () => {
       if (!quitPopup) showQuitPopup();
     });
+
+    this.input.on('pointerdown', (pointer) => {
+      if (!startMenuImage.visible) {
+        handleClawAction();
+      }
+    });
+  }
+
+  function handleClawAction() {
+    if (!clawDropping && !clawRetracting && !holdingObject) {
+      clawDropping = true;
+    } else if (holdingObject) {
+      fallingGroup.add(attachedPrize);
+      attachedPrize.setVelocityY(300);
+      holdingObject = false;
+      attachedPrize = null;
+    }
   }
 
   function update() {
@@ -173,109 +210,6 @@
         prize.setVelocityY(0);
       }
     });
-  }
-
-  function destroyAllPrizes() {
-    prizeGroup.clear(true, true);
-    fallingGroup.clear(true, true);
-  }
-
-  function showVictoryScreen() {
-    victory = true;
-    this.add.image(400, 300, 'victoryBg').setDepth(21);
-    this.add.text(400, 150, 'You Win!', {
-      fontSize: '64px',
-      color: '#fff'
-    }).setOrigin(0.5).setDepth(22);
-
-    const claimPrizeButton = this.add.text(400, 240, 'Mint Prize', {
-      fontSize: '28px', backgroundColor: '#ff0', color: '#000', padding: { x: 10, y: 5 }
-    }).setOrigin(0.5).setInteractive().setDepth(22);
-
-    const mintButton = this.add.text(400, 300, 'Mint NFT', {
-      fontSize: '32px',
-      backgroundColor: '#fff',
-      color: '#000',
-      padding: { x: 10, y: 5 }
-    }).setOrigin(0.5).setInteractive().setDepth(22);
-
-    const restartButton = this.add.text(400, 360, 'Restart', {
-      fontSize: '28px', backgroundColor: '#ccc', color: '#000', padding: { x: 10, y: 5 }
-    }).setOrigin(0.5).setInteractive().setDepth(22);
-
-    claimPrizeButton.on('pointerdown', async () => {
-  try {
-    if (typeof window.ethereum === 'undefined') {
-      alert("MetaMask is not detected. Please install MetaMask to continue.");
-      return;
-    }
-
-    // Request account access and set provider/signer
-    const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-    await provider.send("eth_requestAccounts", []);
-    const signer = provider.getSigner();
-
-    const contractAddress = "0x7eFC729a41FC7073dE028712b0FB3950F735f9ca";
-    const abi = ["function mintPrize() public"];
-
-    const contract = new ethers.Contract(contractAddress, abi, signer);
-
-    // Trigger mint
-    const tx = await contract.mintPrize();
-    console.log("Transaction sent:", tx.hash);
-
-    await tx.wait();
-    alert("🎉 Prize minted successfully!");
-  } catch (err) {
-    console.error("Minting failed:", err);
-    if (err.code === 4001) {
-      alert("Transaction rejected by user.");
-    } else {
-      alert("Minting failed. See console for details.");
-    }
-  }
-});
-    mintButton.on('pointerdown', () => {
-      window.open("https://opensea.io/collection/heartbones", '_blank');
-      game.destroy(true);
-      window.location.href = "https://www.funfartgames.com/thanks-for-playing";
-    });
-
-    restartButton.on('pointerdown', () => {
-      location.reload();
-    });
-  }
-  
-
-  function showQuitPopup() {
-    quitPopup = document.createElement('div');
-    quitPopup.id = 'quitPopup';
-    quitPopup.style.position = 'fixed';
-    quitPopup.style.top = '50%';
-    quitPopup.style.left = '50%';
-    quitPopup.style.transform = 'translate(-50%, -50%)';
-    quitPopup.style.backgroundColor = '#222';
-    quitPopup.style.color = '#fff';
-    quitPopup.style.padding = '20px';
-    quitPopup.style.border = '2px solid #fff';
-    quitPopup.style.zIndex = '1000';
-    quitPopup.innerHTML = '<p>Are you sure you want to quit?</p>';
-
-    const yesBtn = document.createElement('button');
-    yesBtn.innerText = 'Yes';
-    yesBtn.onclick = () => game.destroy(true);
-
-    const noBtn = document.createElement('button');
-    noBtn.innerText = 'No';
-    noBtn.style.marginLeft = '10px';
-    noBtn.onclick = () => {
-      document.body.removeChild(quitPopup);
-      quitPopup = null;
-    };
-
-    quitPopup.appendChild(yesBtn);
-    quitPopup.appendChild(noBtn);
-    document.body.appendChild(quitPopup);
   }
 </script>
 </body>
