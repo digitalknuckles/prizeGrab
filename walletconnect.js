@@ -5,7 +5,7 @@ const projectId = "15da3c431a74b29edb63198a503d45b5";
 const metadata = {
   name: "FunFart Grab",
   description: "Mint NFTs after winning the game!",
-  url: "https://digitalknuckles.github.io/MoveToMint/",
+  url: "https://digitalknuckles.github.io/prizeGrab/",
   icons: ["https://digitalknuckles.github.io/prizeGrab/icon.png"]
 };
 
