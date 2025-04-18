@@ -203,30 +203,37 @@
     }).setOrigin(0.5).setInteractive().setDepth(22);
 
     claimPrizeButton.on('pointerdown', async () => {
-      try {
-        if (!window.ethereum) {
-          alert("Please install MetaMask!");
-          return;
-        }
+  try {
+    if (typeof window.ethereum === 'undefined') {
+      alert("MetaMask is not detected. Please install MetaMask to continue.");
+      return;
+    }
 
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        const signer = provider.getSigner();
+    // Request account access and set provider/signer
+    const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+    await provider.send("eth_requestAccounts", []);
+    const signer = provider.getSigner();
 
-        const contractAddress = "0x7eFC729a41FC7073dE028712b0FB3950F735f9ca";
-        const abi = ["function mintPrize() public"];
+    const contractAddress = "0x7eFC729a41FC7073dE028712b0FB3950F735f9ca";
+    const abi = ["function mintPrize() public"];
 
-        const contract = new ethers.Contract(contractAddress, abi, signer);
-        const tx = await contract.mintPrize();
-        await tx.wait();
+    const contract = new ethers.Contract(contractAddress, abi, signer);
 
-        alert("🎉 Prize minted successfully!");
-      } catch (err) {
-        console.error("Minting failed:", err);
-        alert("Minting failed. See console for details.");
-      }
-    });
+    // Trigger mint
+    const tx = await contract.mintPrize();
+    console.log("Transaction sent:", tx.hash);
 
+    await tx.wait();
+    alert("🎉 Prize minted successfully!");
+  } catch (err) {
+    console.error("Minting failed:", err);
+    if (err.code === 4001) {
+      alert("Transaction rejected by user.");
+    } else {
+      alert("Minting failed. See console for details.");
+    }
+  }
+});
     mintButton.on('pointerdown', () => {
       window.open("https://opensea.io/collection/heartbones", '_blank');
       game.destroy(true);
