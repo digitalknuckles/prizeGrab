@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FunFart Grab (Web Version)</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.85.2/dist/phaser.js"></script>
@@ -18,19 +19,20 @@
       cursor: pointer;
     }
     #quitPopup button:hover {
-      background-color: #666;
+      background-color: #444;
     }
   </style>
 </head>
 <body>
 <script>
-const config = {
+  const config = {
   type: Phaser.AUTO,
   width: 800,
   height: 600,
   scale: {
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    parent: 'game-container', // Optional: if you're mounting to a div
   },
   backgroundColor: '#ffffff',
   physics: {
@@ -40,186 +42,252 @@ const config = {
       debug: false
     }
   },
-  scene: { preload, create, update }
+  scene: {
+    preload,
+    create,
+    update
+  }
 };
 
-const game = new Phaser.Game(config);
+  const game = new Phaser.Game(config);
 
-let claw, clawHitbox, overlay, overlayLeft, overlayRight, prizeGroup, fallingGroup, prizeBox, victory = false;
-let clawDropping = false, clawRetracting = false, holdingObject = false;
-let attachedPrize = null, moveLeft = false, moveRight = false;
-let startMenuImage, leftButton, rightButton, quitPopup;
-let victoryBg, claimButton, exitButton;
-let claimClicked = false;
+  let claw, clawHitbox, overlay, overlayLeft, overlayRight, prizeGroup, fallingGroup, prizeBox, victory = false;
+  let clawDropping = false, clawRetracting = false, holdingObject = false;
+  let attachedPrize = null, moveLeft = false, moveRight = false;
+  let startMenuImage, quitPopup, leftButton, rightButton;
 
-function preload() {
-  this.load.image('background', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeic345u2ts5tz3u3xcguldwnlg3ye5wzl6o6vew7gnf6mh3du3xpnu');
-  this.load.image('claw', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreicph5dqmvlsxvn7kbpd3ipf3qaul7sunbm3zhbx5tvf3ofgecljsq');
-  this.load.image('prize', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreibyehv3juhhr7jgfblaziguedekj7skpqzndbbvd7xnj7isuxhela');
-  this.load.image('victoryBg', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeie5fzzrljnlnejrhmrqaog3z4edm5hmsncuk4kayj5zyh7edfso5q');
-  this.load.image('overlay_idle', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreie32rhyvbibeer5minlpijbri5puqq36bafszwyjnhc4ozakew3oy');
-  this.load.image('overlay_left', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreig6zkwf6swgewwmwdhuiaualqymbfpbsdc4v3j3m47syg26x3uclq');
-  this.load.image('overlay_right', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreichlj2x2l4ejoyxale7kbfmiszesglm2aftsbdnrchjy4br5q3n2e');
-  this.load.image('startMenu', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreicexx7almk7jkzgd7up4uibqh2n7v6gkmeimbgoslbclc3dsndhhy');
-}
-
-function create() {
-  this.add.image(400, 300, 'background');
-  prizeGroup = this.physics.add.group();
-  fallingGroup = this.physics.add.group();
-
-  for (let x = 200; x < 600; x += 150) {
-    const prize = this.physics.add.image(x, 550, 'prize').setImmovable(true);
-    prize.body.setSize(16, 24).setOffset(20, 14);
-    prize.setDepth(1);
-    prizeGroup.add(prize);
+  function preload() {
+    this.load.image('background', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeic345u2ts5tz3u3xcguldwnlg3ye5wzl6o6vew7gnf6mh3du3xpnu');
+    this.load.image('claw', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreicph5dqmvlsxvn7kbpd3ipf3qaul7sunbm3zhbx5tvf3ofgecljsq');
+    this.load.image('prize', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreibyehv3juhhr7jgfblaziguedekj7skpqzndbbvd7xnj7isuxhela');
+    this.load.image('victoryBg', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeie5fzzrljnlnejrhmrqaog3z4edm5hmsncuk4kayj5zyh7edfso5q');
+    this.load.image('overlay_idle', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreie32rhyvbibeer5minlpijbri5puqq36bafszwyjnhc4ozakew3oy');
+    this.load.image('overlay_left', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreig6zkwf6swgewwmwdhuiaualqymbfpbsdc4v3j3m47syg26x3uclq');
+    this.load.image('overlay_right', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreichlj2x2l4ejoyxale7kbfmiszesglm2aftsbdnrchjy4br5q3n2e');
+    this.load.image('startMenu', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreicexx7almk7jkzgd7up4uibqh2n7v6gkmeimbgoslbclc3dsndhhy');
   }
 
-  claw = this.add.image(400, 50, 'claw').setDepth(2);
-  clawHitbox = this.physics.add.image(400, 50).setImmovable(true).setVisible(false);
-  clawHitbox.body.setSize(20, 40).setOffset(-10, -20);
-  overlay = this.add.image(400, 300, 'overlay_idle').setDepth(3);
+  function create() {
+    this.add.image(400, 300, 'background');
 
-  prizeBox = this.add.rectangle(770, 770, 40, 10, 0x00ff00, 0.2);
-  this.physics.add.existing(prizeBox, true);
+    prizeGroup = this.physics.add.group();
+    fallingGroup = this.physics.add.group();
 
-  startMenuImage = this.add.image(400, 300, 'startMenu').setDepth(20);
-  startMenuImage.setInteractive().on('pointerdown', () => startMenuImage.setVisible(false));
-
-  // UI Buttons
-  const escButton = this.add.text(10, 560, 'EXIT', {
-    fontSize: '24px', backgroundColor: '#222', color: '#fff', padding: { x: 10, y: 5 }
-  }).setInteractive().setDepth(21).on('pointerdown', () => location.reload());
-
-  leftButton = this.add.text(300, 520, '< LEFT', {
-    fontSize: '24px', backgroundColor: '#333', color: '#fff', padding: { x: 20, y: 10 }
-  }).setInteractive().setDepth(21);
-  rightButton = this.add.text(420, 520, 'RIGHT >', {
-    fontSize: '24px', backgroundColor: '#333', color: '#fff', padding: { x: 20, y: 10 }
-  }).setInteractive().setDepth(21);
-
-  leftButton.on('pointerdown', () => { moveLeft = true; overlay.setTexture('overlay_left'); });
-  leftButton.on('pointerup', () => { moveLeft = false; overlay.setTexture('overlay_idle'); });
-  rightButton.on('pointerdown', () => { moveRight = true; overlay.setTexture('overlay_right'); });
-  rightButton.on('pointerup', () => { moveRight = false; overlay.setTexture('overlay_idle'); });
-
-  // Touch Drag
-  this.input.on('pointermove', (pointer) => {
-    if (!clawDropping && !clawRetracting) {
-      claw.x = Phaser.Math.Clamp(pointer.x, 50, 750);
-      clawHitbox.x = claw.x;
+    for (let x = 200; x < 600; x += 150) {
+      const prize = this.physics.add.image(x, 550, 'prize').setImmovable(true);
+      prize.body.setSize(16, 24).setOffset(20, 14);
+      prize.setDepth(1);
+      prizeGroup.add(prize);
     }
-  });
 
-  // Keyboard
-  this.input.keyboard.on('keydown-LEFT', () => { moveLeft = true; overlay.setTexture('overlay_left'); });
-  this.input.keyboard.on('keyup-LEFT', () => { moveLeft = false; overlay.setTexture('overlay_idle'); });
-  this.input.keyboard.on('keydown-RIGHT', () => { moveRight = true; overlay.setTexture('overlay_right'); });
-  this.input.keyboard.on('keyup-RIGHT', () => { moveRight = false; overlay.setTexture('overlay_idle'); });
-  this.input.keyboard.on('keydown-SPACE', () => {
-    if (startMenuImage.visible) startMenuImage.setVisible(false);
-    else handleClawAction();
-  });
-  this.input.on('pointerdown', (pointer) => {
-    if (!startMenuImage.visible) handleClawAction();
-  });
-}
+    claw = this.add.image(400, 50, 'claw').setDepth(2);
+    clawHitbox = this.physics.add.image(400, 50).setImmovable(true).setVisible(false);
+    clawHitbox.body.setSize(20, 40).setOffset(-10, -20);
 
-function handleClawAction() {
-  if (!clawDropping && !clawRetracting && !holdingObject) {
-    clawDropping = true;
-  } else if (holdingObject) {
-    fallingGroup.add(attachedPrize);
-    attachedPrize.setVelocityY(300);
-    holdingObject = false;
-    attachedPrize = null;
-  }
-}
+    overlay = this.add.image(400, 300, 'overlay_idle').setDepth(3);
 
-function update() {
-  if (victory) return;
+    if (!prizeBox || !prizeBox.body) {
+      prizeBox = this.add.rectangle(770, 770, 40, 10, 0x00ff00, 0.2);
+      this.physics.add.existing(prizeBox, true);
+    }
 
-  if (moveLeft && !clawDropping && !clawRetracting) {
-    claw.x = clawHitbox.x = Math.max(50, claw.x - 5);
-  }
-  if (moveRight && !clawDropping && !clawRetracting) {
-    claw.x = clawHitbox.x = Math.min(750, claw.x + 5);
-  }
+    startMenuImage = this.add.image(400, 300, 'startMenu').setDepth(20);
+    startMenuImage.setInteractive().on('pointerdown', () => {
+      startMenuImage.setVisible(false);
+    });
 
-  if (clawDropping) {
-    claw.y += 4;
-    clawHitbox.y += 4;
-    prizeGroup.children.iterate((prize) => {
-      if (Phaser.Geom.Intersects.RectangleToRectangle(clawHitbox.getBounds(), prize.getBounds())) {
-        attachedPrize = prize;
-        holdingObject = true;
-        clawDropping = false;
-        clawRetracting = true;
+    // Escape Button (bottom-left)
+    const escButton = this.add.text(10, 560, 'EXIT', {
+      fontSize: '24px', backgroundColor: '#222', color: '#fff', padding: { x: 10, y: 5 }
+    }).setInteractive().setDepth(21);
+    escButton.on('pointerdown', () => {
+      if (!quitPopup) showQuitPopup();
+    });
+
+    // Touch buttons for movement (bottom center)
+    leftButton = this.add.text(300, 520, '< LEFT', {
+      fontSize: '24px', backgroundColor: '#333', color: '#fff', padding: { x: 20, y: 10 }
+    }).setInteractive().setDepth(21);
+    rightButton = this.add.text(420, 520, 'RIGHT >', {
+      fontSize: '24px', backgroundColor: '#333', color: '#fff', padding: { x: 20, y: 10 }
+    }).setInteractive().setDepth(21);
+
+    leftButton.on('pointerdown', () => { moveLeft = true; overlay.setTexture('overlay_left'); });
+    leftButton.on('pointerup', () => { moveLeft = false; overlay.setTexture('overlay_idle'); });
+    rightButton.on('pointerdown', () => { moveRight = true; overlay.setTexture('overlay_right'); });
+    rightButton.on('pointerup', () => { moveRight = false; overlay.setTexture('overlay_idle'); });
+
+    // Mobile drag to move
+    this.input.on('pointermove', (pointer) => {
+      if (!clawDropping && !clawRetracting) {
+        claw.x = Phaser.Math.Clamp(pointer.x, 50, 750);
+        clawHitbox.x = claw.x;
       }
     });
-    if (claw.y >= 500 && !holdingObject) {
-      clawDropping = false;
-      setTimeout(() => clawRetracting = true, 500);
-    }
-  } else if (clawRetracting) {
-    claw.y -= 3;
-    clawHitbox.y -= 3;
-    if (claw.y <= 50) clawRetracting = false;
+
+    this.input.keyboard.on('keydown-LEFT', () => {
+      moveLeft = true;
+      overlay.setTexture('overlay_left');
+    });
+    this.input.keyboard.on('keyup-LEFT', () => {
+      moveLeft = false;
+      overlay.setTexture('overlay_idle');
+    });
+    this.input.keyboard.on('keydown-RIGHT', () => {
+      moveRight = true;
+      overlay.setTexture('overlay_right');
+    });
+    this.input.keyboard.on('keyup-RIGHT', () => {
+      moveRight = false;
+      overlay.setTexture('overlay_idle');
+    });
+    this.input.keyboard.on('keydown-SPACE', () => {
+      if (startMenuImage && startMenuImage.visible) {
+        startMenuImage.setVisible(false);
+        return;
+      }
+      handleClawAction();
+    });
+    this.input.keyboard.on('keydown-ESC', () => {
+      if (!quitPopup) showQuitPopup();
+    });
+
+    this.input.on('pointerdown', (pointer) => {
+      if (!startMenuImage.visible) {
+        handleClawAction();
+      }
+    });
   }
 
-  if (holdingObject && attachedPrize) {
-    attachedPrize.x = claw.x;
-    attachedPrize.y = claw.y + 190;
+  function handleClawAction() {
+    if (!clawDropping && !clawRetracting && !holdingObject) {
+      clawDropping = true;
+    } else if (holdingObject) {
+      fallingGroup.add(attachedPrize);
+      attachedPrize.setVelocityY(300);
+      holdingObject = false;
+      attachedPrize = null;
+    }
   }
 
-  fallingGroup.children.iterate((prize) => {
-    if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
-      destroyAllPrizes();
-      showVictoryScreen.call(this);
-    } else if (prize.y >= 560) {
-      prize.setVelocityY(0);
+  function update() {
+    if (victory) return;
+
+    if (moveLeft && !clawDropping && !clawRetracting) {
+      claw.x = clawHitbox.x = Math.max(50, claw.x - 5);
     }
-  });
-}
-
-function destroyAllPrizes() {
-  fallingGroup.clear(true, true);
-}
-
-function showVictoryScreen() {
-  victory = true;
-  victoryBg = this.add.image(400, 300, 'victoryBg').setDepth(30);
-
-  claimButton = this.add.text(280, 400, 'CLAIM NFT TROPHY', {
-    fontSize: '24px',
-    backgroundColor: '#28a745',
-    color: '#fff',
-    padding: { x: 20, y: 10 }
-  }).setInteractive().setDepth(31);
-
-  claimButton.on('pointerdown', () => {
-    if (!claimClicked) {
-      claimClicked = true;
-      window.open('https://magenta-broad-orca-873.mypinata.cloud/ipfs/QmPScs3KUoH5SHozZovjjHU2E3ayYHn84LaGbGm2Rn3qck', '_blank');
+    if (moveRight && !clawDropping && !clawRetracting) {
+      claw.x = clawHitbox.x = Math.min(750, claw.x + 5);
     }
-  });
 
-  exitButton = this.add.text(320, 460, 'EXIT GAME', {
-    fontSize: '24px',
-    backgroundColor: '#dc3545',
-    color: '#fff',
-    padding: { x: 20, y: 10 }
-  }).setInteractive().setDepth(31);
+    if (clawDropping) {
+      claw.y += 4;
+      clawHitbox.y += 4;
+      prizeGroup.children.iterate((prize) => {
+        if (Phaser.Geom.Intersects.RectangleToRectangle(clawHitbox.getBounds(), prize.getBounds())) {
+          attachedPrize = prize;
+          holdingObject = true;
+          clawDropping = false;
+          clawRetracting = true;
+        }
+      });
+      if (claw.y >= 500 && !holdingObject) {
+        clawDropping = false;
+        setTimeout(() => clawRetracting = true, 500);
+      }
+    } else if (clawRetracting) {
+      claw.y -= 3;
+      clawHitbox.y -= 3;
+      if (claw.y <= 50) {
+        clawRetracting = false;
+      }
+    }
 
-  exitButton.on('pointerdown', () => {
-    location.reload();
+    if (holdingObject && attachedPrize) {
+      attachedPrize.x = claw.x;
+      attachedPrize.y = claw.y + 190;
+    }
+
+    fallingGroup.children.iterate((prize) => {
+      if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
+        destroyAllPrizes();
+        showVictoryScreen.call(this);
+      } else if (prize.y >= 560) {
+        prize.setVelocityY(0);
+      }
+    });
+  }
+  function destroyAllPrizes() {
+  fallingGroup.children.each(child => {
+    child.destroy();
   });
 }
+  function showVictoryScreen() {
+    victory = true;
+    this.add.image(400, 300, 'victoryBg').setDepth(21);
+    this.add.text(400, 150, 'You Win!', {
+      fontSize: '64px',
+      color: '#fff'
+    }).setOrigin(0.5).setDepth(22);
 
-  exitButton.on('pointerdown', () => {
-    location.reload();
-  });
-}
+    const claimPrizeButton = this.add.text(400, 240, 'Mint Prize', {
+      fontSize: '28px', backgroundColor: '#ff0', color: '#000', padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setInteractive().setDepth(22);
+
+    const mintButton = this.add.text(400, 300, 'Mint NFT', {
+      fontSize: '32px',
+      backgroundColor: '#fff',
+      color: '#000',
+      padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setInteractive().setDepth(22);
+
+    const restartButton = this.add.text(400, 360, 'Restart', {
+      fontSize: '28px', backgroundColor: '#ccc', color: '#000', padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setInteractive().setDepth(22);
+
+    claimPrizeButton.on('pointerdown', async () => {
+  try {
+    if (typeof window.ethereum === 'undefined') {
+      alert("MetaMask is not detected. Please install MetaMask to continue.");
+      return;
+    }
+
+    // Request account access and set provider/signer
+    const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+    await provider.send("eth_requestAccounts", []);
+    const signer = provider.getSigner();
+
+    const contractAddress = "0x7eFC729a41FC7073dE028712b0FB3950F735f9ca";
+    const abi = ["function mintPrize() public"];
+
+    const contract = new ethers.Contract(contractAddress, abi, signer);
+
+    // Trigger mint
+    const tx = await contract.mintPrize();
+    console.log("Transaction sent:", tx.hash);
+
+    await tx.wait();
+    alert("🎉 Prize minted successfully!");
+  } catch (err) {
+    console.error("Minting failed:", err);
+    if (err.code === 4001) {
+      alert("Transaction rejected by user.");
+    } else {
+      alert("Minting failed. See console for details.");
+    }
+  }
+});
+    mintButton.on('pointerdown', () => {
+      window.open("https://opensea.io/collection/heartbones", '_blank');
+      game.destroy(true);
+      window.location.href = "https://www.funfartgames.com/thanks-for-playing";
+    });
+
+    restartButton.on('pointerdown', () => {
+      location.reload();
+    });
+  }
 </script>
+  
 </body>
 </html>
