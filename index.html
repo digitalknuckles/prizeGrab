@@ -2,54 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>FunFart Grab (Web Version)</title>
-
-  <!-- External Libraries -->
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.85.2/dist/phaser.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
-  <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
-
-  <!-- Game & Wallet Scripts -->
-  <script src="walletconnect.js"></script>
-  <script src="game.js"></script>
-
+  <title>HB Collect!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body {
+    body, html {
       margin: 0;
       padding: 0;
       overflow: hidden;
-      background: black;
+      background: #000;
     }
     canvas {
       display: block;
-      margin: auto;
-    }
-    #quitPopup {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: #222;
-      color: white;
-      padding: 20px;
-      border: 2px solid #fff;
-      z-index: 1000;
-    }
-    #quitPopup button {
-      background-color: #444;
-      color: white;
-      padding: 10px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    #quitPopup button:hover {
-      background-color: #666;
+      margin: 0 auto;
     }
   </style>
 </head>
+<body>
+  <!-- Load Phaser -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.85.2/dist/phaser.js"></script>
 
-<body></body>
+  <!-- Load WalletConnect -->
+  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.6.6/dist/umd/index.min.js"></script>
+
+  <!-- Load ethers.js UMD (for browser global use) -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+  <!-- Load Web3Modal -->
+  <script src="https://cdn.jsdelivr.net/npm/web3modal@1.9.7/dist/index.min.js"></script>
+
+  <!-- Load your custom game and wallet connection logic -->
+  <script src="walletconnect.js"></script>
+  <script src="game.js"></script>
+</body>
 </html>
