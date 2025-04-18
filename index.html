@@ -216,6 +216,71 @@
     child.destroy();
   });
 }
+  function showVictoryScreen() {
+    victory = true;
+    this.add.image(400, 300, 'victoryBg').setDepth(21);
+    this.add.text(400, 150, 'You Win!', {
+      fontSize: '64px',
+      color: '#fff'
+    }).setOrigin(0.5).setDepth(22);
+
+    const claimPrizeButton = this.add.text(400, 240, 'Mint Prize', {
+      fontSize: '28px', backgroundColor: '#ff0', color: '#000', padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setInteractive().setDepth(22);
+
+    const mintButton = this.add.text(400, 300, 'Mint NFT', {
+      fontSize: '32px',
+      backgroundColor: '#fff',
+      color: '#000',
+      padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setInteractive().setDepth(22);
+
+    const restartButton = this.add.text(400, 360, 'Restart', {
+      fontSize: '28px', backgroundColor: '#ccc', color: '#000', padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setInteractive().setDepth(22);
+
+    claimPrizeButton.on('pointerdown', async () => {
+  try {
+    if (typeof window.ethereum === 'undefined') {
+      alert("MetaMask is not detected. Please install MetaMask to continue.");
+      return;
+    }
+
+    // Request account access and set provider/signer
+    const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+    await provider.send("eth_requestAccounts", []);
+    const signer = provider.getSigner();
+
+    const contractAddress = "0x7eFC729a41FC7073dE028712b0FB3950F735f9ca";
+    const abi = ["function mintPrize() public"];
+
+    const contract = new ethers.Contract(contractAddress, abi, signer);
+
+    // Trigger mint
+    const tx = await contract.mintPrize();
+    console.log("Transaction sent:", tx.hash);
+
+    await tx.wait();
+    alert("🎉 Prize minted successfully!");
+  } catch (err) {
+    console.error("Minting failed:", err);
+    if (err.code === 4001) {
+      alert("Transaction rejected by user.");
+    } else {
+      alert("Minting failed. See console for details.");
+    }
+  }
+});
+    mintButton.on('pointerdown', () => {
+      window.open("https://opensea.io/collection/heartbones", '_blank');
+      game.destroy(true);
+      window.location.href = "https://www.funfartgames.com/thanks-for-playing";
+    });
+
+    restartButton.on('pointerdown', () => {
+      location.reload();
+    });
+  }
 </script>
   
 </body>
