@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FunFart Grab (Web Version)</title>
@@ -25,23 +26,28 @@
 <body>
 <script>
   const config = {
-    type: Phaser.AUTO,
-    width: 800,
-    height: 600,
-    backgroundColor: '#ffffff',
-    physics: {
-      default: 'arcade',
-      arcade: {
-        gravity: { y: 0 },
-        debug: false
-      }
-    },
-    scene: {
-      preload,
-      create,
-      update
+  type: Phaser.AUTO,
+  width: 800,
+  height: 600,
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    parent: 'game-container', // Optional: if you're mounting to a div
+  },
+  backgroundColor: '#ffffff',
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: { y: 0 },
+      debug: false
     }
-  };
+  },
+  scene: {
+    preload,
+    create,
+    update
+  }
+};
 
   const game = new Phaser.Game(config);
 
