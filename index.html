@@ -51,7 +51,6 @@
 <body>
 
 <script>
-  // WalletConnect and Mint Integration
   const projectId = "15da3c431a74b29edb63198a503d45b5";
 
   const metadata = {
@@ -118,12 +117,7 @@
       alert("❌ Minting failed: " + (err.reason || err.message || err));
     }
   };
-<!-- Expose mintPrizeNFT to global scope -->
-<script type="module">
-  import { mintPrizeNFT } from './walletconnect.js';
-  window.mintPrizeNFT = mintPrizeNFT;
 </script>
-
 <script>
   let claw, clawHitbox, overlay, overlayLeft, overlayRight, prizeGroup, fallingGroup, prizeBox, victory = false;
   let clawDropping = false, clawRetracting = false, holdingObject = false;
