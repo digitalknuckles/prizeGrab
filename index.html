@@ -96,7 +96,6 @@ function create() {
     startMenuImage.setVisible(false);
   });
 
-  // Escape Button (bottom-left)
   const escButton = this.add.text(10, 560, 'EXIT', {
     fontSize: '24px', backgroundColor: '#222', color: '#fff', padding: { x: 10, y: 5 }
   }).setInteractive().setDepth(21);
@@ -104,7 +103,6 @@ function create() {
     if (!quitPopup) showQuitPopup();
   });
 
-  // Claw Action Button (bottom center)
   const clawButton = this.add.text(330, 520, 'GRAB / DROP', {
     fontSize: '24px', backgroundColor: '#f00', color: '#fff', padding: { x: 20, y: 10 }
   }).setInteractive().setDepth(21);
@@ -112,107 +110,74 @@ function create() {
     if (!startMenuImage.visible) handleClawAction();
   });
 
-  // Touch drag for claw movement
-  this.input.on('pointermove', (pointer) => {
+  // Claw target x position
+  this.targetClawX = claw.x;
+
+  this.input.on('pointerdown', (pointer) => {
     if (!clawDropping && !clawRetracting) {
-      claw.x = Phaser.Math.Clamp(pointer.x, 50, 750);
-      clawHitbox.x = claw.x;
+      this.targetClawX = Phaser.Math.Clamp(pointer.x, 50, 750);
     }
   });
 
-  // Keyboard controls
-  this.input.keyboard.on('keydown-LEFT', () => {
-    moveLeft = true;
-    overlay.setTexture('overlay_left');
-  });
-  this.input.keyboard.on('keyup-LEFT', () => {
-    moveLeft = false;
-    overlay.setTexture('overlay_idle');
-  });
-  this.input.keyboard.on('keydown-RIGHT', () => {
-    moveRight = true;
-    overlay.setTexture('overlay_right');
-  });
-  this.input.keyboard.on('keyup-RIGHT', () => {
-    moveRight = false;
-    overlay.setTexture('overlay_idle');
-  });
-  this.input.keyboard.on('keydown-SPACE', () => {
-    if (startMenuImage && startMenuImage.visible) {
-      startMenuImage.setVisible(false);
-      return;
+  this.input.on('pointermove', (pointer) => {
+    if (pointer.isDown && !clawDropping && !clawRetracting) {
+      this.targetClawX = Phaser.Math.Clamp(pointer.x, 50, 750);
     }
-    handleClawAction();
   });
-  this.input.keyboard.on('keydown-ESC', () => {
-    if (!quitPopup) showQuitPopup();
-  });
-
-  // REMOVED this.input.on('pointerdown') global block
 }
 
-  function handleClawAction() {
-    if (!clawDropping && !clawRetracting && !holdingObject) {
-      clawDropping = true;
-    } else if (holdingObject) {
-      fallingGroup.add(attachedPrize);
-      attachedPrize.setVelocityY(300);
-      holdingObject = false;
-      attachedPrize = null;
+  function update() {
+  if (victory) return;
+
+  const moveSpeed = 5;
+
+  // Smooth claw X movement
+  if (!clawDropping && !clawRetracting) {
+    if (Math.abs(claw.x - this.targetClawX) > moveSpeed) {
+      claw.x += moveSpeed * Math.sign(this.targetClawX - claw.x);
+    } else {
+      claw.x = this.targetClawX;
     }
+    clawHitbox.x = claw.x;
   }
 
-  function update() {
-    if (victory) return;
-
-    if (moveLeft && !clawDropping && !clawRetracting) {
-      claw.x = clawHitbox.x = Math.max(50, claw.x - 5);
-    }
-    if (moveRight && !clawDropping && !clawRetracting) {
-      claw.x = clawHitbox.x = Math.min(750, claw.x + 5);
-    }
-
-    if (clawDropping) {
-      claw.y += 4;
-      clawHitbox.y += 4;
-      prizeGroup.children.iterate((prize) => {
-        if (Phaser.Geom.Intersects.RectangleToRectangle(clawHitbox.getBounds(), prize.getBounds())) {
-          attachedPrize = prize;
-          holdingObject = true;
-          clawDropping = false;
-          clawRetracting = true;
-        }
-      });
-      if (claw.y >= 500 && !holdingObject) {
+  if (clawDropping) {
+    claw.y += 4;
+    clawHitbox.y += 4;
+    prizeGroup.children.iterate((prize) => {
+      if (Phaser.Geom.Intersects.RectangleToRectangle(clawHitbox.getBounds(), prize.getBounds())) {
+        attachedPrize = prize;
+        holdingObject = true;
         clawDropping = false;
-        setTimeout(() => clawRetracting = true, 500);
-      }
-    } else if (clawRetracting) {
-      claw.y -= 3;
-      clawHitbox.y -= 3;
-      if (claw.y <= 50) {
-        clawRetracting = false;
-      }
-    }
-
-    if (holdingObject && attachedPrize) {
-      attachedPrize.x = claw.x;
-      attachedPrize.y = claw.y + 190;
-    }
-
-    fallingGroup.children.iterate((prize) => {
-      if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
-        destroyAllPrizes();
-        showVictoryScreen.call(this);
-      } else if (prize.y >= 560) {
-        prize.setVelocityY(0);
+        clawRetracting = true;
       }
     });
+    if (claw.y >= 500 && !holdingObject) {
+      clawDropping = false;
+      setTimeout(() => clawRetracting = true, 500);
+    }
+  } else if (clawRetracting) {
+    claw.y -= 3;
+    clawHitbox.y -= 3;
+    if (claw.y <= 50) {
+      clawRetracting = false;
+    }
   }
-  function destroyAllPrizes() {
-  fallingGroup.children.each(child => {
-    child.destroy();
+
+  if (holdingObject && attachedPrize) {
+    attachedPrize.x = claw.x;
+    attachedPrize.y = claw.y + 190;
+  }
+
+  fallingGroup.children.iterate((prize) => {
+    if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
+      destroyAllPrizes();
+      showVictoryScreen.call(this);
+    } else if (prize.y >= 560) {
+      prize.setVelocityY(0);
+    }
   });
+}
 }
   function showVictoryScreen() {
     victory = true;
