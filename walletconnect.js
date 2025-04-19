@@ -46,7 +46,7 @@ window.mintPrizeNFT = async function () {
 
   try {
     const contract = new window.ethers.Contract(
-      "0x7eFC729a41FC7073dE028712b0FB3950F735f9ca",
+      "0xcaB543F6Af365a9E75f56e7Fc85D9C84F1482B12",
       [
         {
           inputs: [],
