@@ -26,21 +26,21 @@
 <body>
 <script>
 // ✅ RECOMMENDED: Place constants and game setup at top level
-const config = {
+  const config = {
   type: Phaser.AUTO,
   width: 800,
   height: 600,
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    parent: 'game-container', // ✅ Best practice for embedding in layout
+    parent: 'game-container', // Optional: if you're mounting to a div
   },
   backgroundColor: '#ffffff',
   physics: {
     default: 'arcade',
     arcade: {
       gravity: { y: 0 },
-      debug: false // ✅ Set to true for development debugging
+      debug: false
     }
   },
   scene: {
@@ -50,27 +50,23 @@ const config = {
   }
 };
 
-const game = new Phaser.Game(config);
+  const game = new Phaser.Game(config);
 
-// Global game objects
-let claw, clawHitbox, overlay, overlayLeft, overlayRight, prizeGroup, fallingGroup, prizeBox;
-let victory = false;
-let clawDropping = false, clawRetracting = false, holdingObject = false;
-let attachedPrize = null;
-let moveLeft = false, moveRight = false;
-let startMenuImage, quitPopup;
+  let claw, clawHitbox, overlay, overlayLeft, overlayRight, prizeGroup, fallingGroup, prizeBox, victory = false;
+  let clawDropping = false, clawRetracting = false, holdingObject = false;
+  let attachedPrize = null, moveLeft = false, moveRight = false;
+  let startMenuImage, quitPopup, leftButton, rightButton;
 
-function preload() {
-  // ✅ RECOMMENDED: Host assets on reliable CDN or IPFS, already applied here
-  this.load.image('background', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeigsjjbs6njnjsbx4t3kfwmvwzjn4mlt67crjcoc7qg5ismmysnfnq');
-  this.load.image('claw', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreicph5dqmvlsxvn7kbpd3ipf3qaul7sunbm3zhbx5tvf3ofgecljsq');
-  this.load.image('prize', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreibyehv3juhhr7jgfblaziguedekj7skpqzndbbvd7xnj7isuxhela');
-  this.load.image('victoryBg', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeie5fzzrljnlnejrhmrqaog3z4edm5hmsncuk4kayj5zyh7edfso5q');
-  this.load.image('overlay_idle', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreie32rhyvbibeer5minlpijbri5puqq36bafszwyjnhc4ozakew3oy');
-  this.load.image('overlay_left', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreig6zkwf6swgewwmwdhuiaualqymbfpbsdc4v3j3m47syg26x3uclq');
-  this.load.image('overlay_right', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreichlj2x2l4ejoyxale7kbfmiszesglm2aftsbdnrchjy4br5q3n2e');
-  this.load.image('startMenu', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeifs3aqe5lz5eumdoqcxjk4ipwcwvtzgmlktb3s4jh3wzixq6vorwu');
-}
+  function preload() {
+    this.load.image('background', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeigsjjbs6njnjsbx4t3kfwmvwzjn4mlt67crjcoc7qg5ismmysnfnq');
+    this.load.image('claw', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreicph5dqmvlsxvn7kbpd3ipf3qaul7sunbm3zhbx5tvf3ofgecljsq');
+    this.load.image('prize', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreibyehv3juhhr7jgfblaziguedekj7skpqzndbbvd7xnj7isuxhela');
+    this.load.image('victoryBg', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeie5fzzrljnlnejrhmrqaog3z4edm5hmsncuk4kayj5zyh7edfso5q');
+    this.load.image('overlay_idle', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreie32rhyvbibeer5minlpijbri5puqq36bafszwyjnhc4ozakew3oy');
+    this.load.image('overlay_left', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreig6zkwf6swgewwmwdhuiaualqymbfpbsdc4v3j3m47syg26x3uclq');
+    this.load.image('overlay_right', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreichlj2x2l4ejoyxale7kbfmiszesglm2aftsbdnrchjy4br5q3n2e');
+    this.load.image('startMenu', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeifs3aqe5lz5eumdoqcxjk4ipwcwvtzgmlktb3s4jh3wzixq6vorwu');
+  }
 
 function create() {
   this.add.image(400, 300, 'background');
@@ -91,7 +87,6 @@ function create() {
 
   overlay = this.add.image(400, 300, 'overlay_idle').setDepth(3);
 
-  // ✅ RECOMMENDED: Use physics.add.existing only once
   if (!prizeBox || !prizeBox.body) {
     prizeBox = this.add.rectangle(770, 770, 40, 10, 0x00ff00, 0.2);
     this.physics.add.existing(prizeBox, true);
@@ -102,25 +97,23 @@ function create() {
     startMenuImage.setVisible(false);
   });
 
-  // Exit button
+  // Escape Button (bottom-left)
   const escButton = this.add.text(10, 560, 'EXIT', {
     fontSize: '24px', backgroundColor: '#222', color: '#fff', padding: { x: 10, y: 5 }
   }).setInteractive().setDepth(21);
-
   escButton.on('pointerdown', () => {
     if (!quitPopup) showQuitPopup();
   });
 
-  // Claw drop button
+  // Claw Action Button (bottom center)
   const clawButton = this.add.text(150, 550, 'GRAB / DROP', {
     fontSize: '24px', backgroundColor: '#f00', color: '#fff', padding: { x: 20, y: 10 }
   }).setInteractive().setDepth(21);
-
   clawButton.on('pointerdown', () => {
     if (!startMenuImage.visible) handleClawAction();
   });
 
-  // ✅ RECOMMENDED: Pointer move for drag gesture
+  // Touch drag for claw movement
   this.input.on('pointermove', (pointer) => {
     if (!clawDropping && !clawRetracting) {
       claw.x = Phaser.Math.Clamp(pointer.x, 50, 750);
@@ -146,125 +139,140 @@ function create() {
     overlay.setTexture('overlay_idle');
   });
   this.input.keyboard.on('keydown-SPACE', () => {
-    if (startMenuImage.visible) {
+    if (startMenuImage && startMenuImage.visible) {
       startMenuImage.setVisible(false);
-    } else {
-      handleClawAction();
+      return;
     }
+    handleClawAction();
   });
   this.input.keyboard.on('keydown-ESC', () => {
     if (!quitPopup) showQuitPopup();
   });
+
+  // REMOVED this.input.on('pointerdown') global block
 }
 
-function update() {
-  if (victory) return;
-
-  // Movement
-  if (moveLeft && !clawDropping && !clawRetracting) {
-    claw.x = clawHitbox.x = Math.max(50, claw.x - 5);
+  function handleClawAction() {
+    if (!clawDropping && !clawRetracting && !holdingObject) {
+      clawDropping = true;
+    } else if (holdingObject) {
+      fallingGroup.add(attachedPrize);
+      attachedPrize.setVelocityY(300);
+      holdingObject = false;
+      attachedPrize = null;
+    }
   }
-  if (moveRight && !clawDropping && !clawRetracting) {
-    claw.x = clawHitbox.x = Math.min(750, claw.x + 5);
-  }
 
-  // Dropping
-  if (clawDropping) {
-    claw.y += 4;
-    clawHitbox.y += 4;
-    prizeGroup.children.iterate((prize) => {
-      if (Phaser.Geom.Intersects.RectangleToRectangle(clawHitbox.getBounds(), prize.getBounds())) {
-        attachedPrize = prize;
-        holdingObject = true;
+  function update() {
+    if (victory) return;
+
+    if (moveLeft && !clawDropping && !clawRetracting) {
+      claw.x = clawHitbox.x = Math.max(50, claw.x - 5);
+    }
+    if (moveRight && !clawDropping && !clawRetracting) {
+      claw.x = clawHitbox.x = Math.min(750, claw.x + 5);
+    }
+
+    if (clawDropping) {
+      claw.y += 4;
+      clawHitbox.y += 4;
+      prizeGroup.children.iterate((prize) => {
+        if (Phaser.Geom.Intersects.RectangleToRectangle(clawHitbox.getBounds(), prize.getBounds())) {
+          attachedPrize = prize;
+          holdingObject = true;
+          clawDropping = false;
+          clawRetracting = true;
+        }
+      });
+      if (claw.y >= 500 && !holdingObject) {
         clawDropping = false;
-        clawRetracting = true;
+        setTimeout(() => clawRetracting = true, 500);
+      }
+    } else if (clawRetracting) {
+      claw.y -= 3;
+      clawHitbox.y -= 3;
+      if (claw.y <= 50) {
+        clawRetracting = false;
+      }
+    }
+
+    if (holdingObject && attachedPrize) {
+      attachedPrize.x = claw.x;
+      attachedPrize.y = claw.y + 190;
+    }
+
+    fallingGroup.children.iterate((prize) => {
+      if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
+        destroyAllPrizes();
+        showVictoryScreen.call(this);
+      } else if (prize.y >= 560) {
+        prize.setVelocityY(0);
       }
     });
-
-    if (claw.y >= 500 && !holdingObject) {
-      clawDropping = false;
-      setTimeout(() => clawRetracting = true, 500);
-    }
-  } else if (clawRetracting) {
-    claw.y -= 3;
-    clawHitbox.y -= 3;
-    if (claw.y <= 50) {
-      clawRetracting = false;
-    }
   }
-
-  if (holdingObject && attachedPrize) {
-    attachedPrize.x = claw.x;
-    attachedPrize.y = claw.y + 190;
-  }
-
-  fallingGroup.children.iterate((prize) => {
-    if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
-      destroyAllPrizes();
-      showVictoryScreen.call(this);
-    } else if (prize.y >= 560) {
-      prize.setVelocityY(0);
-    }
-  });
-}
-
-function handleClawAction() {
-  if (!clawDropping && !clawRetracting && !holdingObject) {
-    clawDropping = true;
-  } else if (holdingObject) {
-    fallingGroup.add(attachedPrize);
-    attachedPrize.setVelocityY(300);
-    holdingObject = false;
-    attachedPrize = null;
-  }
-}
-
-function destroyAllPrizes() {
+  function destroyAllPrizes() {
   fallingGroup.children.each(child => {
     child.destroy();
   });
 }
+  function showVictoryScreen() {
+    victory = true;
+    this.add.image(400, 300, 'victoryBg').setDepth(21);
+    this.add.text(400, 150, 'You Win!', {
+      fontSize: '64px',
+      color: '#fff'
+    }).setOrigin(0.5).setDepth(22);
 
-function showVictoryScreen() {
-  victory = true;
-  this.add.image(400, 300, 'victoryBg').setDepth(21);
-  this.add.text(400, 150, 'You Win!', {
-    fontSize: '64px',
-    color: '#fff'
-  }).setOrigin(0.5).setDepth(22);
+    const claimPrizeButton = this.add.text(400, 240, 'Mint Prize', {
+      fontSize: '28px', backgroundColor: '#ff0', color: '#000', padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setInteractive().setDepth(22);
 
-  const claimPrizeButton = this.add.text(400, 240, 'Mint Prize', {
-    fontSize: '28px', backgroundColor: '#ff0', color: '#000', padding: { x: 10, y: 5 }
-  }).setOrigin(0.5).setInteractive().setDepth(22);
+    const mintButton = this.add.text(400, 300, 'Mint NFT', {
+      fontSize: '32px',
+      backgroundColor: '#fff',
+      color: '#000',
+      padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setInteractive().setDepth(22);
 
-  const mintButton = this.add.text(400, 300, 'Mint NFT', {
-    fontSize: '32px', backgroundColor: '#fff', color: '#000', padding: { x: 10, y: 5 }
-  }).setOrigin(0.5).setInteractive().setDepth(22);
+    const restartButton = this.add.text(400, 360, 'Restart', {
+      fontSize: '28px', backgroundColor: '#ccc', color: '#000', padding: { x: 10, y: 5 }
+    }).setOrigin(0.5).setInteractive().setDepth(22);
 
-  const restartButton = this.add.text(400, 360, 'Restart', {
-    fontSize: '28px', backgroundColor: '#ccc', color: '#000', padding: { x: 10, y: 5 }
-  }).setOrigin(0.5).setInteractive().setDepth(22);
-
-  claimPrizeButton.on('pointerdown', async () => {
-    try {
-      if (typeof window.ethereum === 'undefined') {
-        alert("MetaMask is not detected. Please install MetaMask to continue.");
-        return;
-      }
-
-      const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-      await provider.send("eth_requestAccounts", []);
-      const signer = provider.getSigner();
-
-      // ➕ Insert contract call logic here
-    } catch (err) {
-      console.error('Error minting NFT:', err);
+    claimPrizeButton.on('pointerdown', async () => {
+  try {
+    if (typeof window.ethereum === 'undefined') {
+      alert("MetaMask is not detected. Please install MetaMask to continue.");
+      return;
     }
-  });
-}
-      mintButton.on('pointerdown', () => {
+
+    // Request account access and set provider/signer
+    const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+    await provider.send("eth_requestAccounts", []);
+    const signer = provider.getSigner();
+
+    const contractAddress = "0xcaB543F6Af365a9E75f56e7Fc85D9C84F1482B12";
+    const abi = ["function mintPrize() public"];
+
+    const contract = new ethers.Contract(contractAddress, abi, signer);
+
+    // Trigger mint
+    const tx = await contract.mintPrize();
+    console.log("Transaction sent:", tx.hash);
+
+    await tx.wait();
+    alert("🎉 Prize minted successfully!");
+  } catch (err) {
+    console.error("Minting failed:", err);
+    if (err.code === 4001) {
+      alert("Transaction rejected by user.");
+    } else {
+      alert("Minting failed. See console for details.");
+    }
+  }
+});
+    mintButton.on('pointerdown', () => {
       window.open("https://opensea.io/collection/heartbones", '_blank');
-      location.reload();
+      game.destroy(true);
       window.location.href = "https://www.funfartgames.com/thanks-for-playing";
     });
 
