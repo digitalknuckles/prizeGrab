@@ -249,7 +249,7 @@ function create() {
     await provider.send("eth_requestAccounts", []);
     const signer = provider.getSigner();
 
-    const contractAddress = "0x7eFC729a41FC7073dE028712b0FB3950F735f9ca";
+    const contractAddress = "0xcaB543F6Af365a9E75f56e7Fc85D9C84F1482B12";
     const abi = ["function mintPrize() public"];
 
     const contract = new ethers.Contract(contractAddress, abi, signer);
