@@ -106,21 +106,42 @@ function create() {
   });
 
   // Claw Action Button (bottom center)
-  const clawButton = this.add.text(150, 550, 'GRAB / DROP', {
-    fontSize: '24px', backgroundColor: '#f00', color: '#fff', padding: { x: 20, y: 10 }
-  }).setInteractive().setDepth(21);
-  clawButton.on('pointerdown', () => {
-    if (!startMenuImage.visible) handleClawAction();
-  });
+  //const clawButton = this.add.text(150, 550, 'GRAB / DROP', {
+    //fontSize: '24px', backgroundColor: '#f00', color: '#fff', padding: { x: 20, y: 10 }
+ // }).setInteractive().setDepth(21);
+  //clawButton.on('pointerdown', () => {
+  //  if (!startMenuImage.visible) handleClawAction();
+ // });
+// Claw Action Oval Button
+const clawButton = this.add.text(400, 540, 'GRAB / DROP', {
+  fontSize: '24px',
+  backgroundColor: '#ff4444',
+  color: '#fff',
+  padding: { x: 30, y: 12 },
+  fixedWidth: 200,
+  align: 'center'
+}).setOrigin(0.5).setInteractive().setDepth(21);
 
+clawButton.on('pointerdown', () => {
+  if (!startMenuImage.visible) handleClawAction();
+});
   // Touch drag for claw movement
-  this.input.on('pointermove', (pointer) => {
-    if (!clawDropping && !clawRetracting) {
-      claw.x = Phaser.Math.Clamp(pointer.x, 50, 750);
-      clawHitbox.x = claw.x;
-    }
-  });
+  //this.input.on('pointermove', (pointer) => {
+  //  if (!clawDropping && !clawRetracting) {
+    //  claw.x = Phaser.Math.Clamp(pointer.x, 50, 750);
+    //  clawHitbox.x = claw.x;
+  //  }
+ // });
+// Store target X for claw movement
+let targetX = claw.x;
 
+// Smooth movement to pointer
+this.input.on('pointermove', (pointer) => {
+  if (!clawDropping && !clawRetracting) {
+    targetX = Phaser.Math.Clamp(pointer.x, 50, 750); // Clamp to game bounds
+  }
+});
+  
   // Keyboard controls
   this.input.keyboard.on('keydown-LEFT', () => {
     moveLeft = true;
@@ -166,13 +187,28 @@ function create() {
   function update() {
     if (victory) return;
 
-    if (moveLeft && !clawDropping && !clawRetracting) {
-      claw.x = clawHitbox.x = Math.max(50, claw.x - 5);
-    }
-    if (moveRight && !clawDropping && !clawRetracting) {
-      claw.x = clawHitbox.x = Math.min(750, claw.x + 5);
-    }
+   // if (moveLeft && !clawDropping && !clawRetracting) {
+    //  claw.x = clawHitbox.x = Math.max(50, claw.x - 5);
+  //  }
+   // if (moveRight && !clawDropping && !clawRetracting) {
+   //   claw.x = clawHitbox.x = Math.min(750, claw.x + 5);
+  //  }
+// Smooth follow to targetX (touch/mouse)
+if (!clawDropping && !clawRetracting) {
+  const speed = 6;
+  claw.x += (targetX - claw.x) * 0.1;
+  clawHitbox.x = claw.x;
+}
 
+// Keyboard movement override
+if (moveLeft) {
+  claw.x = clawHitbox.x = Math.max(50, claw.x - 5);
+  targetX = claw.x;
+}
+if (moveRight) {
+  claw.x = clawHitbox.x = Math.min(750, claw.x + 5);
+  targetX = claw.x;
+}
     if (clawDropping) {
       claw.y += 4;
       clawHitbox.y += 4;
@@ -215,36 +251,39 @@ function create() {
     child.destroy();
   });
 }
-  function showVictoryScreen() {
-    victory = true;
-    this.add.image(400, 300, 'victoryBg').setDepth(21);
-    this.add.text(400, 150, 'You Win!', {
-      fontSize: '64px',
-      color: '#fff'
-    }).setOrigin(0.5).setDepth(22);
+function showVictoryScreen() {
+  victory = true;
+  this.add.image(400, 300, 'victoryBg').setDepth(21);
+  this.add.text(400, 150, 'You Win!', {
+    fontSize: '64px',
+    color: '#fff'
+  }).setOrigin(0.5).setDepth(22);
 
-    const claimPrizeButton = this.add.text(400, 240, 'Mint Prize', {
-      fontSize: '28px', backgroundColor: '#ff0', color: '#000', padding: { x: 10, y: 5 }
-    }).setOrigin(0.5).setInteractive().setDepth(22);
+  // Mint NFT Button
+  const mintButton = this.add.text(400, 280, 'Mint NFT', {
+    fontSize: '32px',
+    backgroundColor: '#fff',
+    color: '#000',
+    padding: { x: 10, y: 5 }
+  }).setOrigin(0.5).setInteractive().setDepth(22);
 
-    const mintButton = this.add.text(400, 300, 'Mint NFT', {
-      fontSize: '32px',
-      backgroundColor: '#fff',
-      color: '#000',
-      padding: { x: 10, y: 5 }
-    }).setOrigin(0.5).setInteractive().setDepth(22);
+  mintButton.on('pointerdown', () => {
+    alert('Minting NFT (simulate call here)');
+    // Insert Web3 minting logic here
+  });
 
-    const restartButton = this.add.text(400, 360, 'Restart', {
-      fontSize: '28px', backgroundColor: '#ccc', color: '#000', padding: { x: 10, y: 5 }
-    }).setOrigin(0.5).setInteractive().setDepth(22);
+  // Restart Button
+  const restartButton = this.add.text(400, 340, 'Restart', {
+    fontSize: '28px',
+    backgroundColor: '#ccc',
+    color: '#000',
+    padding: { x: 10, y: 5 }
+  }).setOrigin(0.5).setInteractive().setDepth(22);
 
-    claimPrizeButton.on('pointerdown', async () => {
-  try {
-    if (typeof window.ethereum === 'undefined') {
-      alert("MetaMask is not detected. Please install MetaMask to continue.");
-      return;
-    }
-
+  restartButton.on('pointerdown', () => {
+    location.reload(); // Refresh page to restart game
+  });
+}
     // Request account access and set provider/signer
     const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
     await provider.send("eth_requestAccounts", []);
