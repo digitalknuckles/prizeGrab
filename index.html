@@ -262,6 +262,16 @@ function showVictoryScreen() {
     }
   });
 }
+      mintButton.on('pointerdown', () => {
+      window.open("https://opensea.io/collection/heartbones", '_blank');
+      location.reload();
+      window.location.href = "https://www.funfartgames.com/thanks-for-playing";
+    });
+
+    restartButton.on('pointerdown', () => {
+      location.reload();
+    });
+  }
 </script>
   
 </body>
