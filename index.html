@@ -222,11 +222,18 @@ function create() {
       color: '#fff'
     }).setOrigin(0.5).setDepth(22);
 
+  const prizeImg = document.createElement('img');
+  prizeImg.src = "./prize.gif"; // Update path if needed
+  prizeImg.alt = "Victory Prize";
+  prizeImg.style.width = "300px";
+  prizeImg.style.height = "auto";
+  prizeImg.style.marginBottom = "20px";
+    
     const claimPrizeButton = this.add.text(400, 240, 'Mint Prize', {
       fontSize: '28px', backgroundColor: '#ff0', color: '#000', padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive().setDepth(22);
 
-    const mintButton = this.add.text(400, 300, 'Mint NFT', {
+    const mintButton = this.add.text(400, 300, 'NFT Collection', {
       fontSize: '32px',
       backgroundColor: '#fff',
       color: '#000',
