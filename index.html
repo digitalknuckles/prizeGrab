@@ -218,17 +218,12 @@ function create() {
   function showVictoryScreen() {
     victory = true;
     this.add.image(400, 300, 'victoryBg').setDepth(21);
+    this.add.image(400, 220, 'prizeGif').setDepth(22).setScale(0.5).setOrigin(0.5);
     this.add.text(400, 150, 'You Win!', {
       fontSize: '64px',
       color: '#fff'
     }).setOrigin(0.5).setDepth(22);
 
- this.add.image(400, 220, 'prizeGif').setDepth(22).setScale(0.5).setOrigin(0.5);
-  prizeImg.src = "./prize.gif.gif"; // Update path if needed
-  prizeImg.alt = "Victory Prize";
-  prizeImg.style.width = "300px";
-  prizeImg.style.height = "auto";
-  prizeImg.style.marginBottom = "20px";
     
     const claimPrizeButton = this.add.text(400, 240, 'Mint Prize', {
       fontSize: '28px', backgroundColor: '#ff0', color: '#000', padding: { x: 10, y: 5 }
