@@ -76,7 +76,7 @@ function create() {
 
   for (let x = 200; x < 600; x += 150) {
     const prize = this.physics.add.image(x, 550, 'prize').setImmovable(true);
-    prize.body.setSize(16, 24).setOffset(20, 14);
+    prize.body.setSize(16, 24).setOffset(200, 50);
     prize.setDepth(1);
     prizeGroup.add(prize);
   }
