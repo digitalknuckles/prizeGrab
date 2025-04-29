@@ -75,14 +75,14 @@ function create() {
   prizeGroup = this.physics.add.group();
   fallingGroup = this.physics.add.group();
 
-for (let x = 100; x < 300; x += 75) {
+for (let x = 200; x < 600; x += 150) {
   const prize = this.physics.add.image(x, 550, 'prize').setImmovable(true);
   prize.body.setSize(16, 24).setOffset(200, 150);
   prize.setDepth(1);
   prizeGroup.add(prize);
 
   // Create invisible hitbox for the prize
-  const hitbox = this.physics.add.image(x, 550).setImmovable(true).setVisible(false);
+  const hitbox = this.physics.add.image(50, 550).setImmovable(true).setVisible(false);
   hitbox.body.setSize(50, 50).setOffset(-10, -50);
   hitbox.setDepth(0); // keep it under everything visually
 
