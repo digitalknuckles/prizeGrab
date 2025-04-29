@@ -182,20 +182,33 @@ function update() {
   }
 
   // Dropping
-  if (clawDropping) {
+if (clawDropping) {
     claw.y += 4;
     clawHitbox.y += 4;
 
     prizeGroup.children.iterate((prize) => {
-      if (this.physics.world.overlap(clawHitbox, prize)) {
-        attachedPrize = prize;
-        holdingObject = true;
+        if (this.physics.world.overlap(clawHitbox, prize)) {
+            attachedPrize = prize;
+            holdingObject = true;
+            clawDropping = false;
+            clawRetracting = true;
+            prize.body.moves = false;
+        }
+    });
+
+    if (claw.y >= 500 && !holdingObject) {
         clawDropping = false;
         clawRetracting = true;
-        prize.body.moves = false;
-      }
-    });
-  }
+    }
+}
+else if (clawRetracting) {
+    claw.y -= 3;
+    clawHitbox.y -= 3;
+
+    if (claw.y <= 50) {
+        clawRetracting = false;
+    }
+}
 
   // ✅ Fix: this checks if claw hit bottom (even if it missed a prize)
   if (claw.y >= 500 && !holdingObject) {
