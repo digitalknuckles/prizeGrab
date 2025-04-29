@@ -65,12 +65,16 @@
     this.load.image('overlay_left', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreig6zkwf6swgewwmwdhuiaualqymbfpbsdc4v3j3m47syg26x3uclq');
     this.load.image('overlay_right', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreichlj2x2l4ejoyxale7kbfmiszesglm2aftsbdnrchjy4br5q3n2e');
     this.load.image('startMenu', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeifs3aqe5lz5eumdoqcxjk4ipwcwvtzgmlktb3s4jh3wzixq6vorwu');
-    this.load.image('prize', './prize.gif.gif');
+    this.load.image('prizeGif', './prize.gif.gif');
   }
 
 function create() {
   this.add.image(400, 300, 'background');
 
+  claw = this.add.image(400, 50, 'claw').setDepth(2);
+  clawHitbox = this.physics.add.image(400, 50).setImmovable(true).setVisible(false);
+  clawHitbox.body.setSize(32, 32).setOffset(0, 0);
+this.physics.add.overlap(clawHitbox, prizeGroup, grabPrize, null, this);
   prizeGroup = this.physics.add.group();
   //fallingGroup = this.physics.add.group();
 this.fallingGroup = this.physics.add.group();
@@ -82,12 +86,18 @@ for (let x = 200; x < 600; x += 150) {
     prizeGroup.add(prizeHitbox);
 
     prizeImage.hitbox = prizeHitbox; // store reference for syncing
+  }
 }
-
-// Create claw image and claw hitbox
-claw = this.add.image(400, 50, 'claw').setDepth(2); // no physics
-clawHitbox = this.physics.add.image(400, 50).setImmovable(true).setVisible(false);
-clawHitbox.body.setSize(32, 32).setOffset(0, 0);
+function grabPrize(claw, prize) {
+  if (!holdingObject) {
+    holdingObject = true;
+    attachedPrize = prize;
+    prize.body.setAllowGravity(false);
+    prize.setVelocity(0, 0);
+    clawDropping = false;
+    clawRetracting = true;
+  }
+}
 
   overlay = this.add.image(400, 300, 'overlay_idle').setDepth(3);
 
@@ -156,28 +166,18 @@ clawHitbox.body.setSize(32, 32).setOffset(0, 0);
   // REMOVED this.input.on('pointerdown') global block
 }
 
-  function handleClawAction() {
-    if (!clawDropping && !clawRetracting && !holdingObject) {
-      clawDropping = true;
-    } else if (holdingObject) {
-      fallingGroup.add(attachedPrize);
-      attachedPrize.setVelocityY(300);
-      holdingObject = false;
-      attachedPrize = null;
-    }
+function handleClawAction() {
+  if (!clawDropping && !clawRetracting && !holdingObject) {
+    clawDropping = true;
+  } else if (holdingObject) {
+    attachedPrize.body.setAllowGravity(true);
+    attachedPrize.setVelocityY(300);
+    fallingGroup.add(attachedPrize);
+    holdingObject = false;
+    attachedPrize = null;
   }
-
-  if (!holdingObject) {
-  this.physics.overlap(clawHitbox, prizeGroup, (claw, prize) => {
-    holdingObject = true;
-    attachedPrize = prize;
-    prize.body.setVelocity(0);
-    prize.body.enable = false; // Disable further collisions
-    clawDropping = false;
-    clawRetracting = true;
-  });
 }
-  
+ 
 function update() {
   if (victory) return;
 
@@ -197,16 +197,7 @@ function update() {
   if (clawDropping) {
     claw.y += 4;
     clawHitbox.y += 4;
-// Add inside the `if (clawDropping)` block in `update()`
-if (!holdingObject) {
-  this.physics.overlap(clawHitbox, prizeGroup, (claw, prize) => {
-    holdingObject = true;
-    attachedPrize = prize;
-    prizeGroup.remove(prize);
-    prize.body.setAllowGravity(false);
-    prize.setVelocity(0, 0);
-  });
-}
+    
     if (fallingGroup) {
       fallingGroup.getChildren().forEach((prize) => {
         if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
@@ -234,12 +225,11 @@ if (!holdingObject) {
   }
 
   // Attach prize to claw
-  if (holdingObject && attachedPrize) {
-    attachedPrize.x = claw.x;
-    attachedPrize.y = claw.y + 190; // Offset from claw
-  }
+if (holdingObject && attachedPrize) {
+  attachedPrize.x = claw.x;
+  attachedPrize.y = claw.y + 190; // offset
 }
-
+}
 function destroyAllPrizes() {
   fallingGroup.clear(true, true);
   prizeGroup.clear(true, true);
