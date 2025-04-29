@@ -206,15 +206,14 @@ for (let x = 200; x < 600; x += 150) {
       attachedPrize.y = claw.y + 190;
     }
 
-    fallingGroup.children.iterate((hitbox) => {
-      if (Phaser.Geom.Intersects.RectangleToRectangle(hitbox.getBounds(), prizeBox.getBounds())) {
-        destroyAllPrizes();
-        showVictoryScreen.call(this);
-      } else if (hitbox.y >= 560) {
-        prize.setVelocityY(0);
-      }
-    });
+fallingGroup.children.iterate((hitbox) => {
+  if (Phaser.Geom.Intersects.RectangleToRectangle(hitbox.getBounds(), prizeBox.getBounds())) {
+    destroyAllPrizes();
+    showVictoryScreen.call(this);
+  } else if (hitbox.y >= 560) {
+    hitbox.setVelocityY(0); // ✅ Corrected
   }
+});
   function destroyAllPrizes() {
   fallingGroup.children.each(child => {
     child.destroy();
