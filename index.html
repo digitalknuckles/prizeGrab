@@ -167,6 +167,17 @@ clawHitbox.body.setSize(32, 32).setOffset(0, 0);
     }
   }
 
+  if (!holdingObject) {
+  this.physics.overlap(clawHitbox, prizeGroup, (claw, prize) => {
+    holdingObject = true;
+    attachedPrize = prize;
+    prize.body.setVelocity(0);
+    prize.body.enable = false; // Disable further collisions
+    clawDropping = false;
+    clawRetracting = true;
+  });
+}
+  
 function update() {
   if (victory) return;
 
@@ -186,7 +197,16 @@ function update() {
   if (clawDropping) {
     claw.y += 4;
     clawHitbox.y += 4;
-
+// Add inside the `if (clawDropping)` block in `update()`
+if (!holdingObject) {
+  this.physics.overlap(clawHitbox, prizeGroup, (claw, prize) => {
+    holdingObject = true;
+    attachedPrize = prize;
+    prizeGroup.remove(prize);
+    prize.body.setAllowGravity(false);
+    prize.setVelocity(0, 0);
+  });
+}
     if (fallingGroup) {
       fallingGroup.getChildren().forEach((prize) => {
         if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
