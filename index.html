@@ -3,6 +3,7 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FunFart Grab (Web Version)</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.85.2/dist/phaser.js"></script>
@@ -23,7 +24,6 @@
   </style>
 </head>
 <body>
-  <div id="game-container"></div>
 <script>
   const config = {
   type: Phaser.AUTO,
@@ -71,33 +71,19 @@
 function create() {
   this.add.image(400, 300, 'background');
 
+  prizeGroup = this.physics.add.group();
+  fallingGroup = this.physics.add.group();
+
+  for (let x = 200; x < 600; x += 150) {
+    const prize = this.physics.add.image(x, 550, 'prize').setImmovable(true);
+    prize.body.setSize(16, 24).setOffset(200, 150);
+    prize.setDepth(1);
+    prizeGroup.add(prize);
+  }
+
   claw = this.add.image(400, 50, 'claw').setDepth(2);
   clawHitbox = this.physics.add.image(400, 50).setImmovable(true).setVisible(false);
-  clawHitbox.body.setSize(32, 32).setOffset(0, 0);
-this.physics.add.overlap(clawHitbox, prizeGroup, grabPrize, null, this);
-  prizeGroup = this.physics.add.group();
-  //fallingGroup = this.physics.add.group();
-this.fallingGroup = this.physics.add.group();
-// Create prize images and prize hitboxes
-for (let x = 200; x < 600; x += 150) {
-    const prizeImage = this.add.image(x, 550, 'prize').setDepth(1); // no physics
-    const prizeHitbox = this.physics.add.image(x, 550).setImmovable(true).setVisible(false); // invisible small hitbox
-    prizeHitbox.body.setSize(32, 32).setOffset(0, -50); // Adjust hitbox size
-    prizeGroup.add(prizeHitbox);
-
-    prizeImage.hitbox = prizeHitbox; // store reference for syncing
-  }
-}
-function grabPrize(claw, prize) {
-  if (!holdingObject) {
-    holdingObject = true;
-    attachedPrize = prize;
-    prize.body.setAllowGravity(false);
-    prize.setVelocity(0, 0);
-    clawDropping = false;
-    clawRetracting = true;
-  }
-}
+  clawHitbox.body.setSize(20, 40).setOffset(-10, -20);
 
   overlay = this.add.image(400, 300, 'overlay_idle').setDepth(3);
 
@@ -163,73 +149,71 @@ function grabPrize(claw, prize) {
     if (!quitPopup) showQuitPopup();
   });
 
-function handleClawAction() {
-  if (!clawDropping && !clawRetracting && !holdingObject) {
-    clawDropping = true;
-  } else if (holdingObject) {
-    attachedPrize.body.setAllowGravity(true);
-    attachedPrize.setVelocityY(300);
-    fallingGroup.add(attachedPrize);
-    holdingObject = false;
-    attachedPrize = null;
-  }
+  // REMOVED this.input.on('pointerdown') global block
 }
- 
-function update() {
-  if (victory) return;
 
-  // Sync hitbox with claw
-  clawHitbox.x = claw.x;
-  clawHitbox.y = claw.y;
-
-  // Move left and right
-  if (moveLeft && !clawDropping && !clawRetracting) {
-    claw.x = clawHitbox.x = Math.max(50, claw.x - 5);
-  }
-  if (moveRight && !clawDropping && !clawRetracting) {
-    claw.x = clawHitbox.x = Math.min(750, claw.x + 5);
+  function handleClawAction() {
+    if (!clawDropping && !clawRetracting && !holdingObject) {
+      clawDropping = true;
+    } else if (holdingObject) {
+      fallingGroup.add(attachedPrize);
+      attachedPrize.setVelocityY(300);
+      holdingObject = false;
+      attachedPrize = null;
+    }
   }
 
-  // Dropping logic
-  if (clawDropping) {
-    claw.y += 4;
-    clawHitbox.y += 4;
-    
-    if (fallingGroup) {
-      fallingGroup.getChildren().forEach((prize) => {
-        if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
-          destroyAllPrizes();
-          showVictoryScreen.call(this);
-        } else if (prize.y >= 550) {
-          prize.setVelocityY(0);
+  function update() {
+    if (victory) return;
+
+    if (moveLeft && !clawDropping && !clawRetracting) {
+      claw.x = clawHitbox.x = Math.max(50, claw.x - 5);
+    }
+    if (moveRight && !clawDropping && !clawRetracting) {
+      claw.x = clawHitbox.x = Math.min(750, claw.x + 5);
+    }
+
+    if (clawDropping) {
+      claw.y += 4;
+      clawHitbox.y += 4;
+      prizeGroup.children.iterate((prize) => {
+        if (Phaser.Geom.Intersects.RectangleToRectangle(clawHitbox.getBounds(), prize.getBounds())) {
+          attachedPrize = prize;
+          holdingObject = true;
+          clawDropping = false;
+          clawRetracting = true;
         }
       });
+      if (claw.y >= 500 && !holdingObject) {
+        clawDropping = false;
+        setTimeout(() => clawRetracting = true, 500);
+      }
+    } else if (clawRetracting) {
+      claw.y -= 3;
+      clawHitbox.y -= 3;
+      if (claw.y <= 50) {
+        clawRetracting = false;
+      }
     }
 
-    if (claw.y >= 550 && !holdingObject) {
-      clawDropping = false;
-      clawRetracting = true;
+    if (holdingObject && attachedPrize) {
+      attachedPrize.x = claw.x;
+      attachedPrize.y = claw.y + 190;
     }
+
+    fallingGroup.children.iterate((prize) => {
+      if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
+        destroyAllPrizes();
+        showVictoryScreen.call(this);
+      } else if (prize.y >= 560) {
+        prize.setVelocityY(0);
+      }
+    });
   }
-
-  // Retracting logic
-  if (clawRetracting) {
-    claw.y -= 3;
-    clawHitbox.y -= 3;
-    if (claw.y <= 50) {
-      clawRetracting = false;
-    }
-  }
-
-  // Attach prize to claw
-if (holdingObject && attachedPrize) {
-  attachedPrize.x = claw.x;
-  attachedPrize.y = claw.y + 190; // offset
-}
-}
-function destroyAllPrizes() {
-  fallingGroup.clear(true, true);
-  prizeGroup.clear(true, true);
+  function destroyAllPrizes() {
+  fallingGroup.children.each(child => {
+    child.destroy();
+  });
 }
   function showVictoryScreen() {
     victory = true;
