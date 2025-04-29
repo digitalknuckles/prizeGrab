@@ -219,24 +219,24 @@ function create() {
     victory = true;
     this.add.image(400, 300, 'victoryBg').setDepth(21);
     this.add.image(400, 220, 'prizeGif').setDepth(22).setScale(0.5).setOrigin(0.5);
-    this.add.text(400, 150, 'You Win!', {
+    this.add.text(400, 175, 'You Win!', {
       fontSize: '64px',
       color: '#fff'
     }).setOrigin(0.5).setDepth(22);
 
     
-    const claimPrizeButton = this.add.text(400, 240, 'Mint Prize', {
+    const claimPrizeButton = this.add.text(400, 265, 'Mint Prize', {
       fontSize: '28px', backgroundColor: '#ff0', color: '#000', padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive().setDepth(22);
 
-    const mintButton = this.add.text(400, 300, 'NFT Collection', {
+    const mintButton = this.add.text(400, 325, 'NFT Collection', {
       fontSize: '32px',
       backgroundColor: '#fff',
       color: '#000',
       padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive().setDepth(22);
 
-    const restartButton = this.add.text(400, 360, 'Restart', {
+    const restartButton = this.add.text(400, 385, 'Restart', {
       fontSize: '28px', backgroundColor: '#ccc', color: '#000', padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive().setDepth(22);
 
