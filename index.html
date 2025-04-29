@@ -72,8 +72,8 @@ function create() {
   this.add.image(400, 300, 'background');
 
   prizeGroup = this.physics.add.group();
-  fallingGroup = this.physics.add.group();
-
+  //fallingGroup = this.physics.add.group();
+this.fallingGroup = this.physics.add.group();
 // Create prize images and prize hitboxes
 for (let x = 200; x < 600; x += 150) {
     const prizeImage = this.add.image(x, 550, 'prize').setDepth(1); // no physics
@@ -187,15 +187,16 @@ function update() {
     claw.y += 4;
     clawHitbox.y += 4;
 
-this.fallingGroup.getChildren().forEach((prize) => {
-  if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), this.prizeBox.getBounds())) {
-    this.destroyAllPrizes();
-    this.showVictoryScreen();
-  } else if (prize.y >= 550) {
-    prize.setVelocityY(0);
-  }
-});
-  }
+if (this.fallingGroup) {
+  this.fallingGroup.getChildren().forEach((prize) => {
+    if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), this.prizeBox.getBounds())) {
+      this.destroyAllPrizes();
+      this.showVictoryScreen();
+    } else if (prize.y >= 550) {
+      prize.setVelocityY(0);
+    }
+  });
+}
 
   if (claw.y >= 550 && !holdingObject) {
     clawDropping = false;
