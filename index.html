@@ -181,9 +181,9 @@ for (let x = 200; x < 600; x += 150) {
     if (clawDropping) {
       claw.y += 4;
       clawHitbox.y += 4;
-      prizeGroup.children.iterate((prize) => {
-        if (Phaser.Geom.Intersects.RectangleToRectangle(clawHitbox.getBounds(), prize.getBounds())) {
-          attachedPrize = prize;
+      prizeGroup.children.iterate((hitbox) => {
+        if (Phaser.Geom.Intersects.RectangleToRectangle(clawHitbox.getBounds(), hitbox.getBounds())) {
+          attachedPrize = hitbox.displaySprite;
           holdingObject = true;
           clawDropping = false;
           clawRetracting = true;
@@ -206,11 +206,11 @@ for (let x = 200; x < 600; x += 150) {
       attachedPrize.y = claw.y + 190;
     }
 
-    fallingGroup.children.iterate((prize) => {
-      if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
+    fallingGroup.children.iterate((hitbox) => {
+      if (Phaser.Geom.Intersects.RectangleToRectangle(hitbox.getBounds(), prizeBox.getBounds())) {
         destroyAllPrizes();
         showVictoryScreen.call(this);
-      } else if (prize.y >= 560) {
+      } else if (hitbox.y >= 560) {
         prize.setVelocityY(0);
       }
     });
