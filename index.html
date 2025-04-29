@@ -52,7 +52,7 @@
 
   const game = new Phaser.Game(config);
 
-  let claw, clawHitbox, overlay, overlayLeft, overlayRight, prizeGroup, prizeHitBox, fallingGroup, prizeBox, victory = false;
+  let claw, clawHitbox, overlay, overlayLeft, overlayRight, prizeGroup, fallingGroup, prizeBox, victory = false;
   let clawDropping = false, clawRetracting = false, holdingObject = false;
   let attachedPrize = null, moveLeft = false, moveRight = false;
   let startMenuImage, quitPopup, leftButton, rightButton;
@@ -76,12 +76,15 @@ function create() {
   fallingGroup = this.physics.add.group();
 
 for (let x = 200; x < 600; x += 150) {
-    const prize = this.add.image(x, 550, 'claw').setDepth(2);
-    prizeHitbox = this.physics.add.image(50, 550).setImmovable(true).setVisible(false);
-    prize.body.setSize(16, 24).setOffset(200, 150);
-    //prize.setDepth(1);
-    prizeGroup.add(prize);
-  }
+  const prize = this.add.image(x, 550, 'prize').setDepth(1); // NOT a physics object
+
+  const hitbox = this.physics.add.image(x, 550).setImmovable(true).setVisible(false);
+  hitbox.body.setSize(50, 50).setOffset(-10, -15);
+
+  prizeGroup.add(hitbox); // Only add hitbox to the physics group
+
+  hitbox.displaySprite = prize; // Optional: reference for animation or state
+}
 
   claw = this.add.image(400, 50, 'claw').setDepth(2);
   clawHitbox = this.physics.add.image(50, -25).setImmovable(true).setVisible(false);
