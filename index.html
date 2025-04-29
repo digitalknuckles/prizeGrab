@@ -197,9 +197,10 @@ function update() {
     });
   }
 
+  // ✅ Fix: this checks if claw hit bottom (even if it missed a prize)
   if (claw.y >= 500 && !holdingObject) {
     clawDropping = false;
-    setTimeout(() => clawRetracting = true, 500);
+    clawRetracting = true; // immediately start retracting
   } else if (clawRetracting) {
     claw.y -= 3;
     clawHitbox.y -= 3;
@@ -210,9 +211,10 @@ function update() {
 
   if (holdingObject && attachedPrize) {
     attachedPrize.x = claw.x;
-    attachedPrize.y = claw.y + 190; // Example offset
+    attachedPrize.y = claw.y + 190; // Offset from claw
   }
 
+  // ✅ Moved INSIDE update:
   fallingGroup.children.iterate((prize) => {
     if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
       destroyAllPrizes();
