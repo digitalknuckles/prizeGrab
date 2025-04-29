@@ -181,40 +181,29 @@ function update() {
     claw.x = clawHitbox.x = Math.min(750, claw.x + 5);
   }
 
-  // Dropping
-if (clawDropping) {
+  // Dropping logic
+  if (clawDropping) {
     claw.y += 4;
     clawHitbox.y += 4;
 
     prizeGroup.children.iterate((prize) => {
-        if (this.physics.world.overlap(clawHitbox, prize)) {
-            attachedPrize = prize;
-            holdingObject = true;
-            clawDropping = false;
-            clawRetracting = true;
-            prize.body.moves = false;
-        }
+      if (this.physics.world.overlap(clawHitbox, prize)) {
+        attachedPrize = prize;
+        holdingObject = true;
+        clawDropping = false;
+        clawRetracting = true;
+        prize.body.moves = false; // Freeze prize while claw moving up
+      }
     });
 
     if (claw.y >= 500 && !holdingObject) {
-        clawDropping = false;
-        clawRetracting = true;
+      clawDropping = false;
+      clawRetracting = true;
     }
-}
-else if (clawRetracting) {
-    claw.y -= 3;
-    clawHitbox.y -= 3;
+  }
 
-    if (claw.y <= 50) {
-        clawRetracting = false;
-    }
-}
-
-  // ✅ Fix: this checks if claw hit bottom (even if it missed a prize)
-  if (claw.y >= 500 && !holdingObject) {
-    clawDropping = false;
-    clawRetracting = true; // immediately start retracting
-  } else if (clawRetracting) {
+  // Retracting logic
+  if (clawRetracting) {
     claw.y -= 3;
     clawHitbox.y -= 3;
     if (claw.y <= 50) {
@@ -222,10 +211,12 @@ else if (clawRetracting) {
     }
   }
 
+  // Attach prize to claw
   if (holdingObject && attachedPrize) {
     attachedPrize.x = claw.x;
     attachedPrize.y = claw.y + 190; // Offset from claw
   }
+}
 
   // ✅ Moved INSIDE update:
   fallingGroup.children.iterate((prize) => {
