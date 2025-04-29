@@ -88,7 +88,7 @@ function spawnPrize(x, y, key = 'prize') {
   prizeGroup.add(prizeHitbox);
 
   // 4. Link visible sprite to hitbox for position syncing
-  prizeHitbox.displaySprite = prize;
+  prizeHitbox.displaySprite = prizeGif;
 }
   function spawnPrize(x, y, key = 'prize') {
   // 1. Add visible sprite for rendering
@@ -102,7 +102,7 @@ function spawnPrize(x, y, key = 'prize') {
   prizeGroup.add(prizeHitbox);
 
   // 4. Link visible sprite to hitbox for position syncing
-  prizeHitbox.displaySprite = prize;
+  prizeHitbox.displaySprite = prizeGif;
 }
 
 function create() {
@@ -112,9 +112,9 @@ function create() {
   fallingGroup = this.physics.add.group();
 
   const prizePositions = [
-    { x: 200, y: 550 },
-    { x: 350, y: 550 },
-    { x: 500, y: 550 }
+    { x: 200, y: 400 },
+    { x: 350, y: 400 },
+    { x: 500, y: 400 }
   ];
 
   prizePositions.forEach(pos => spawnPrize.call(this, pos.x, pos.y));
