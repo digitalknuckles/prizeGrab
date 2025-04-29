@@ -83,7 +83,7 @@ function create() {
   }
 
   claw = this.add.image(400, 50, 'claw').setDepth(2);
-  clawHitbox = this.physics.add.image(400, 50).setImmovable(true).setVisible(false);
+  clawHitbox = this.physics.add.image(32, 50).setImmovable(true).setVisible(false);
   clawHitbox.body.setSize(20, 40).setOffset(-10, -20);
 
   overlay = this.add.image(400, 300, 'overlay_idle').setDepth(3);
