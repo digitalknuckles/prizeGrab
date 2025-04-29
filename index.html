@@ -191,13 +191,13 @@ function update() {
       if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
         destroyAllPrizes();
         showVictoryScreen.call(this);
-      } else if (prize.y >= 560) {
+      } else if (prize.y >= 550) {
         prize.setVelocityY(0);
       }
     });
   }
 
-  if (claw.y >= 500 && !holdingObject) {
+  if (claw.y >= 550 && !holdingObject) {
     clawDropping = false;
     clawRetracting = true;
   }
@@ -223,7 +223,7 @@ fallingGroup.children.iterate((prize) => {
   if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
     destroyAllPrizes();
     showVictoryScreen.call(this);
-  } else if (prize.y >= 560) {
+  } else if (prize.y >= 550) {
     prize.setVelocityY(0);
   }
 });
