@@ -213,7 +213,8 @@ fallingGroup.children.iterate((hitbox) => {
   } else if (hitbox.y >= 560) {
     hitbox.setVelocityY(0); // ✅ Corrected
   }
-});
+  });
+}
   function destroyAllPrizes() {
   fallingGroup.children.each(child => {
     child.destroy();
