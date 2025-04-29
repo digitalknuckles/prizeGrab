@@ -69,6 +69,12 @@
     this.load.image('prizeGif', './prize.gif.gif');
   }
 
+  function create() {
+  this.add.image(400, 300, 'background');
+
+  prizeGroup = this.physics.add.group();
+  fallingGroup = this.physics.add.group();
+
 function spawnPrize(x, y, key = 'prize') {
   // 1. Add visible sprite for rendering
   const prize = this.add.image(x, y, key).setDepth(2); // Set depth for rendering order
@@ -83,12 +89,6 @@ function spawnPrize(x, y, key = 'prize') {
   // 4. Link visible sprite to hitbox for position syncing
   prizeHitbox.displaySprite = prize;
 }
-
-function create() {
-  this.add.image(400, 300, 'background');
-
-  prizeGroup = this.physics.add.group();
-  fallingGroup = this.physics.add.group();
 
   const prizePositions = [
     { x: 200, y: 550 },
