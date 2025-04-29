@@ -219,7 +219,7 @@ function update() {
 }
 
   // ✅ Moved INSIDE update:
-fallingGroup.children.iterate((prize) => {
+fallingGroup.getChildren().forEach((prize) => {
   if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
     destroyAllPrizes();
     showVictoryScreen.call(this);
