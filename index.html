@@ -213,7 +213,6 @@ function update() {
     attachedPrize.y = claw.y + 190; // Example offset
   }
 
-  // 🛠 THIS WAS FLOATING - now properly placed:
   fallingGroup.children.iterate((prize) => {
     if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
       destroyAllPrizes();
@@ -224,14 +223,6 @@ function update() {
   });
 }
 
-    fallingGroup.children.iterate((prize) => {
-      if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
-        destroyAllPrizes();
-        showVictoryScreen.call(this);
-      } else if (prize.y >= 560) {
-        prize.setVelocityY(0);
-      }
-    });
   function destroyAllPrizes() {
   fallingGroup.children.each(child => {
     child.destroy();
