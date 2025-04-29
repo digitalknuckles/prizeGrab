@@ -3,7 +3,6 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FunFart Grab (Web Version)</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.85.2/dist/phaser.js"></script>
@@ -74,16 +73,20 @@ function create() {
   prizeGroup = this.physics.add.group();
   fallingGroup = this.physics.add.group();
 
-  for (let x = 200; x < 600; x += 150) {
-    const prize = this.physics.add.image(x, 550, 'prize').setImmovable(true);
-    prize.body.setSize(16, 24).setOffset(200, 150);
-    prize.setDepth(1);
-    prizeGroup.add(prize);
-  }
+// Create prize images and prize hitboxes
+for (let x = 200; x < 600; x += 150) {
+    const prizeImage = this.add.image(x, 550, 'prize').setDepth(1); // no physics
+    const prizeHitbox = this.physics.add.image(x, 550).setImmovable(true).setVisible(false); // invisible small hitbox
+    prizeHitbox.body.setSize(16, 24).setOffset(0, 0); // Adjust hitbox size
+    prizeGroup.add(prizeHitbox);
 
-  claw = this.add.image(400, 50, 'claw').setDepth(2);
-  clawHitbox = this.physics.add.image(400, 50).setImmovable(true).setVisible(false);
-  clawHitbox.body.setSize(20, 40).setOffset(-10, -20);
+    prizeImage.hitbox = prizeHitbox; // store reference for syncing
+}
+
+// Create claw image and claw hitbox
+claw = this.add.image(400, 50, 'claw').setDepth(2); // no physics
+clawHitbox = this.physics.add.image(400, 50).setImmovable(true).setVisible(false);
+clawHitbox.body.setSize(20, 40).setOffset(0, 0);
 
   overlay = this.add.image(400, 300, 'overlay_idle').setDepth(3);
 
@@ -163,43 +166,53 @@ function create() {
     }
   }
 
-  function update() {
-    if (victory) return;
+function update() {
+  if (victory) return;
 
-    if (moveLeft && !clawDropping && !clawRetracting) {
-      claw.x = clawHitbox.x = Math.max(50, claw.x - 5);
-    }
-    if (moveRight && !clawDropping && !clawRetracting) {
-      claw.x = clawHitbox.x = Math.min(750, claw.x + 5);
-    }
+  // Sync hitbox with claw
+  clawHitbox.x = claw.x;
+  clawHitbox.y = claw.y;
 
-    if (clawDropping) {
-      claw.y += 4;
-      clawHitbox.y += 4;
-      prizeGroup.children.iterate((prize) => {
-        if (Phaser.Geom.Intersects.RectangleToRectangle(clawHitbox.getBounds(), prize.getBounds())) {
-          attachedPrize = prize;
-          holdingObject = true;
-          clawDropping = false;
-          clawRetracting = true;
-        }
-      });
-      if (claw.y >= 500 && !holdingObject) {
+  // Move left and right
+  if (moveLeft && !clawDropping && !clawRetracting) {
+    claw.x = clawHitbox.x = Math.max(50, claw.x - 5);
+  }
+  if (moveRight && !clawDropping && !clawRetracting) {
+    claw.x = clawHitbox.x = Math.min(750, claw.x + 5);
+  }
+
+  // Dropping
+  if (clawDropping) {
+    claw.y += 4;
+    clawHitbox.y += 4;
+
+    prizeGroup.children.iterate((prize) => {
+      if (this.physics.world.overlap(clawHitbox, prize)) {
+        attachedPrize = prize;
+        holdingObject = true;
         clawDropping = false;
-        setTimeout(() => clawRetracting = true, 500);
+        clawRetracting = true;
+        prize.body.moves = false;
       }
-    } else if (clawRetracting) {
-      claw.y -= 3;
-      clawHitbox.y -= 3;
-      if (claw.y <= 50) {
-        clawRetracting = false;
-      }
-    }
+    });
+  }
 
-    if (holdingObject && attachedPrize) {
-      attachedPrize.x = claw.x;
-      attachedPrize.y = claw.y + 190;
+  if (claw.y >= 500 && !holdingObject) {
+    clawDropping = false;
+    setTimeout(() => clawRetracting = true, 500);
+  } else if (clawRetracting) {
+    claw.y -= 3;
+    clawHitbox.y -= 3;
+    if (claw.y <= 50) {
+      clawRetracting = false;
     }
+  }
+
+  if (holdingObject && attachedPrize) {
+    attachedPrize.x = claw.x;
+    attachedPrize.y = claw.y + 190; // Example offset
+  }
+}
 
     fallingGroup.children.iterate((prize) => {
       if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
