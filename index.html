@@ -187,20 +187,19 @@ function update() {
     claw.y += 4;
     clawHitbox.y += 4;
 
-  fallingGroup.children.iterate((prize) => {
-    if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
-      destroyAllPrizes();
-      showVictoryScreen.call(this);
-    } else if (prize.y >= 560) {
-      prize.setVelocityY(0);
-    }
-  });
-}
+    fallingGroup.children.iterate((prize) => {
+      if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
+        destroyAllPrizes();
+        showVictoryScreen.call(this);
+      } else if (prize.y >= 560) {
+        prize.setVelocityY(0);
+      }
+    });
+  }
 
-    if (claw.y >= 500 && !holdingObject) {
-      clawDropping = false;
-      clawRetracting = true;
-    }
+  if (claw.y >= 500 && !holdingObject) {
+    clawDropping = false;
+    clawRetracting = true;
   }
 
   // Retracting logic
