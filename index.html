@@ -79,7 +79,7 @@ for (let x = 200; x < 600; x += 150) {
   const prize = this.add.image(x, 550, 'prize').setDepth(1); // NOT a physics object
 
   const hitbox = this.physics.add.image(x, 550).setImmovable(true).setVisible(false);
-  hitbox.body.setSize(50, 50).setOffset(-10, -15);
+  hitbox.body.setSize(50, 50).setOffset(-10, -50);
 
   prizeGroup.add(hitbox); // Only add hitbox to the physics group
 
@@ -87,7 +87,7 @@ for (let x = 200; x < 600; x += 150) {
 }
 
   claw = this.add.image(400, 50, 'claw').setDepth(2);
-  clawHitbox = this.physics.add.image(50, -25).setImmovable(true).setVisible(false);
+  clawHitbox = this.physics.add.image(50, 25).setImmovable(true).setVisible(false);
   clawHitbox.body.setSize(50, 70).setOffset(-40, -50);
 
   overlay = this.add.image(400, 300, 'overlay_idle').setDepth(3);
