@@ -23,6 +23,7 @@
   </style>
 </head>
 <body>
+  <div id="game-container"></div>
 <script>
   const config = {
   type: Phaser.AUTO,
@@ -186,15 +187,15 @@ function update() {
     claw.y += 4;
     clawHitbox.y += 4;
 
-    prizeGroup.children.iterate((prize) => {
-      if (this.physics.world.overlap(clawHitbox, prize)) {
-        attachedPrize = prize;
-        holdingObject = true;
-        clawDropping = false;
-        clawRetracting = true;
-        prize.body.moves = false; // Freeze prize while claw moving up
-      }
-    });
+  fallingGroup.children.iterate((prize) => {
+    if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
+      destroyAllPrizes();
+      showVictoryScreen.call(this);
+    } else if (prize.y >= 560) {
+      prize.setVelocityY(0);
+    }
+  });
+}
 
     if (claw.y >= 500 && !holdingObject) {
       clawDropping = false;
@@ -219,20 +220,18 @@ function update() {
 }
 
   // ✅ Moved INSIDE update:
-  fallingGroup.children.iterate((prize) => {
-    if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
-      destroyAllPrizes();
-      showVictoryScreen.call(this);
-    } else if (prize.y >= 560) {
-      prize.setVelocityY(0);
-    }
-  });
-}
+fallingGroup.children.iterate((prize) => {
+  if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
+    destroyAllPrizes();
+    showVictoryScreen.call(this);
+  } else if (prize.y >= 560) {
+    prize.setVelocityY(0);
+  }
+});
 
-  function destroyAllPrizes() {
-  fallingGroup.children.each(child => {
-    child.destroy();
-  });
+function destroyAllPrizes() {
+  fallingGroup.clear(true, true);
+  prizeGroup.clear(true, true);
 }
   function showVictoryScreen() {
     victory = true;
