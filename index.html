@@ -205,7 +205,15 @@ for (let x = 200; x < 600; x += 150) {
       attachedPrize.x = claw.x;
       attachedPrize.y = claw.y + 190;
     }
-
+  
+  prizeGroup.children.iterate((hitbox) => {
+    const sprite = hitbox.displaySprite;
+    if (sprite) {
+      sprite.x = hitbox.x;
+      sprite.y = hitbox.y;
+    }
+  });
+    
 fallingGroup.children.iterate((hitbox) => {
   if (Phaser.Geom.Intersects.RectangleToRectangle(hitbox.getBounds(), prizeBox.getBounds())) {
     destroyAllPrizes();
