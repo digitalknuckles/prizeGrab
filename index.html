@@ -187,20 +187,21 @@ function update() {
     claw.y += 4;
     clawHitbox.y += 4;
 
-if (this.fallingGroup) {
-  this.fallingGroup.getChildren().forEach((prize) => {
-    if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), this.prizeBox.getBounds())) {
-      this.destroyAllPrizes();
-      this.showVictoryScreen();
-    } else if (prize.y >= 550) {
-      prize.setVelocityY(0);
+    if (fallingGroup) {
+      fallingGroup.getChildren().forEach((prize) => {
+        if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
+          destroyAllPrizes();
+          showVictoryScreen.call(this);
+        } else if (prize.y >= 550) {
+          prize.setVelocityY(0);
+        }
+      });
     }
-  });
-}
 
-  if (claw.y >= 550 && !holdingObject) {
-    clawDropping = false;
-    clawRetracting = true;
+    if (claw.y >= 550 && !holdingObject) {
+      clawDropping = false;
+      clawRetracting = true;
+    }
   }
 
   // Retracting logic
@@ -218,16 +219,6 @@ if (this.fallingGroup) {
     attachedPrize.y = claw.y + 190; // Offset from claw
   }
 }
-
-  // ✅ Moved INSIDE update:
-fallingGroup.getChildren().forEach((prize) => {
-  if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
-    destroyAllPrizes();
-    showVictoryScreen.call(this);
-  } else if (prize.y >= 550) {
-    prize.setVelocityY(0);
-  }
-});
 
 function destroyAllPrizes() {
   fallingGroup.clear(true, true);
