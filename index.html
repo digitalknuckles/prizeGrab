@@ -188,7 +188,7 @@ function update() {
     clawHitbox.y += 4;
 
     fallingGroup.children.iterate((prize) => {
-      if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), prizeBox.getBounds())) {
+      if (Phaser.Geom.Intersects.RectangleToRectangle(prize.getBounds(), clawHitbox.getBounds())) {
         destroyAllPrizes();
         showVictoryScreen.call(this);
       } else if (prize.y >= 550) {
