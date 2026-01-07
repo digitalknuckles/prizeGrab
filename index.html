@@ -48,13 +48,17 @@
     update
   }
 };
-
+  'use strict';
   const game = new Phaser.Game(config);
 
   let claw, clawHitbox, overlay, overlayLeft, overlayRight, prizeGroup, fallingGroup, prizeBox, victory = false;
   let clawDropping = false, clawRetracting = false, holdingObject = false;
   let attachedPrize = null, moveLeft = false, moveRight = false;
   let startMenuImage, quitPopup, leftButton, rightButton;
+  let dropButton, leftMoveButton, rightMoveButton;
+  let dropBlinkTween;
+  let clawCable;
+  let gameActive = false;
 
   function preload() {
     this.load.image('background', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeigsjjbs6njnjsbx4t3kfwmvwzjn4mlt67crjcoc7qg5ismmysnfnq');
@@ -65,26 +69,66 @@
     this.load.image('overlay_left', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreig6zkwf6swgewwmwdhuiaualqymbfpbsdc4v3j3m47syg26x3uclq');
     this.load.image('overlay_right', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafkreichlj2x2l4ejoyxale7kbfmiszesglm2aftsbdnrchjy4br5q3n2e');
     this.load.image('startMenu', 'https://magenta-broad-orca-873.mypinata.cloud/ipfs/bafybeifs3aqe5lz5eumdoqcxjk4ipwcwvtzgmlktb3s4jh3wzixq6vorwu');
-    this.load.image('prizeGif', './prize.gif.gif');
   }
 
+function startDropBlink(scene) {
+  if (!dropButton || dropBlinkTween) return;
+
+  dropBlinkTween = scene.tweens.add({
+    targets: dropButton,
+    alpha: 0.25,
+    duration: 400,
+    yoyo: true,
+    repeat: -1
+  });
+}
+
+function stopDropBlink() {
+  if (dropBlinkTween) {
+    dropBlinkTween.stop();
+    dropBlinkTween = null;
+  }
+
+  if (dropButton) {
+    dropButton.setAlpha(1);
+  }
+}
+  
+  function spawnPrizes(scene) {
+  prizeGroup.clear(true, true);
+
+  for (let x = 200; x < 600; x += 150) {
+    const prize = scene.physics.add.image(x, 550, 'prize').setImmovable(true);
+    prize.body.setSize(16, 24).setOffset(20, 14);
+    prize.setDepth(1);
+    prizeGroup.add(prize);
+  }
+}
+  
 function create() {
   this.add.image(400, 300, 'background');
+
+  //Mouse clamp and swipe movement clamp (off)
+  this.input.dragDistanceThreshold = 9999;
 
   prizeGroup = this.physics.add.group();
   fallingGroup = this.physics.add.group();
 
-  for (let x = 200; x < 600; x += 150) {
-    const prize = this.physics.add.image(x, 550, 'prize').setImmovable(true);
-    prize.body.setSize(16, 24).setOffset(200, 150);
-    prize.setDepth(1);
-    prizeGroup.add(prize);
-  }
-
+  spawnPrizes(this);
+/*            for (let x = 200; x < 600; x += 150) {
+              const prize = this.physics.add.image(x, 550, 'prize').setImmovable(true);
+              prize.body.setSize(16, 24).setOffset(20, 14);
+              prize.setDepth(1);
+              prizeGroup.add(prize);
+            }
+*/
   claw = this.add.image(400, 50, 'claw').setDepth(2);
-  clawHitbox = this.physics.add.image(50, -25).setImmovable(true).setVisible(false);
-  clawHitbox.body.setSize(50, 70).setOffset(-40, -50);
+  clawHitbox = this.physics.add.image(400, 50).setImmovable(true).setVisible(false);
+  clawHitbox.body.setSize(20, 40).setOffset(-10, -20);
 
+  clawCable = this.add.graphics();
+  clawCable.setDepth(1); // behind claw, above background
+  
   overlay = this.add.image(400, 300, 'overlay_idle').setDepth(3);
 
   if (!prizeBox || !prizeBox.body) {
@@ -93,33 +137,121 @@ function create() {
   }
 
   startMenuImage = this.add.image(400, 300, 'startMenu').setDepth(20);
+  
   startMenuImage.setInteractive().on('pointerdown', () => {
-    startMenuImage.setVisible(false);
-  });
-
+  startMenuImage.setVisible(false);
+  gameActive = true;
+  startDropBlink(this);
+});
+  
   // Escape Button (bottom-left)
   const escButton = this.add.text(10, 560, 'EXIT', {
     fontSize: '24px', backgroundColor: '#222', color: '#fff', padding: { x: 10, y: 5 }
   }).setInteractive().setDepth(21);
-  escButton.on('pointerdown', () => {
-    if (!quitPopup) showQuitPopup();
+escButton.on('pointerdown', () => {
+  resetToStartMenu.call(this);
+});
+
+  function resetToStartMenu() {
+  gameActive = false;
+  victory = false;
+
+  clawDropping = false;
+  clawRetracting = false;
+  holdingObject = false;
+  attachedPrize = null;
+
+  // Reset claw
+  claw.setPosition(400, 50);
+  clawHitbox.setPosition(400, 50);
+
+  // Clear all physics objects
+  fallingGroup.clear(true, true);
+
+  // Destroy and respawn prizes cleanly
+  spawnPrizes(this);
+
+  // Stop blinking + music
+  stopDropBlink();
+    
+        //Music Placeholder
+                        /* if (bgMusic && bgMusic.isPlaying) {
+                            bgMusic.stop();
+                          }
+                          */
+  // Show start menu
+    startMenuImage.setVisible(true);
+  }
+
+const controlY = 540;
+const spacing = 160;
+
+// LEFT BUTTON
+leftMoveButton = this.add.text(400 - spacing, controlY, '◀', {
+  fontSize: '32px',
+  backgroundColor: '#333',
+  color: '#fff',
+  padding: { x: 25, y: 15 }
+}).setOrigin(0.5).setInteractive().setDepth(21);
+
+leftMoveButton
+  .on('pointerdown', () => {
+    moveLeft = true;
+    overlay.setTexture('overlay_left');
+  })
+  .on('pointerup', () => {
+    moveLeft = false;
+    overlay.setTexture('overlay_idle');
+  })
+  .on('pointerout', () => {
+    moveLeft = false;
+    overlay.setTexture('overlay_idle');
   });
 
-  // Claw Action Button (bottom center)
-  const clawButton = this.add.text(150, 550, 'GRAB / DROP', {
-    fontSize: '24px', backgroundColor: '#f00', color: '#fff', padding: { x: 20, y: 10 }
-  }).setInteractive().setDepth(21);
-  clawButton.on('pointerdown', () => {
-    if (!startMenuImage.visible) handleClawAction();
+// DROP BUTTON
+dropButton = this.add.text(400, controlY, 'DROP', {
+  fontSize: '26px',
+  backgroundColor: '#d00',
+  color: '#fff',
+  padding: { x: 30, y: 15 }
+}).setOrigin(0.5).setInteractive().setDepth(21);
+
+dropButton.on('pointerdown', () => {
+ if (gameActive) handleClawAction();
+});
+
+dropButton.setInteractive({ useHandCursor: true });
+
+  
+// RIGHT BUTTON
+rightMoveButton = this.add.text(400 + spacing, controlY, '▶', {
+  fontSize: '32px',
+  backgroundColor: '#333',
+  color: '#fff',
+  padding: { x: 25, y: 15 }
+}).setOrigin(0.5).setInteractive().setDepth(21);
+
+rightMoveButton
+  .on('pointerdown', () => {
+    moveRight = true;
+    overlay.setTexture('overlay_right');
+  })
+  .on('pointerup', () => {
+    moveRight = false;
+    overlay.setTexture('overlay_idle');
+  })
+  .on('pointerout', () => {
+    moveRight = false;
+    overlay.setTexture('overlay_idle');
   });
 
-  // Touch drag for claw movement
+  /*/ Touch drag for claw movement
   this.input.on('pointermove', (pointer) => {
     if (!clawDropping && !clawRetracting) {
       claw.x = Phaser.Math.Clamp(pointer.x, 50, 750);
       clawHitbox.x = claw.x;
     }
-  });
+  });*/
 
   // Keyboard controls
   this.input.keyboard.on('keydown-LEFT', () => {
@@ -138,13 +270,15 @@ function create() {
     moveRight = false;
     overlay.setTexture('overlay_idle');
   });
-  this.input.keyboard.on('keydown-SPACE', () => {
-    if (startMenuImage && startMenuImage.visible) {
-      startMenuImage.setVisible(false);
-      return;
-    }
-    handleClawAction();
-  });
+this.input.keyboard.on('keydown-SPACE', () => {
+  if (!gameActive) {
+    startMenuImage.setVisible(false);
+    gameActive = true;
+    startDropBlink(this);
+    return;
+  }
+  handleClawAction();
+});
   this.input.keyboard.on('keydown-ESC', () => {
     if (!quitPopup) showQuitPopup();
   });
@@ -152,20 +286,27 @@ function create() {
   // REMOVED this.input.on('pointerdown') global block
 }
 
-  function handleClawAction() {
-    if (!clawDropping && !clawRetracting && !holdingObject) {
-      clawDropping = true;
-    } else if (holdingObject) {
-      fallingGroup.add(attachedPrize);
-      attachedPrize.setVelocityY(300);
-      holdingObject = false;
-      attachedPrize = null;
-    }
+function handleClawAction() {
+  if (!gameActive) return;
+
+  if (!clawDropping && !clawRetracting && !holdingObject) {
+    stopDropBlink();
+    clawDropping = true;
+  } else if (holdingObject) {
+    fallingGroup.add(attachedPrize);
+    attachedPrize.setVelocityY(300);
+    holdingObject = false;
+    attachedPrize = null;
   }
+}
 
   function update() {
     if (victory) return;
+    drawClawCable();
+    if (!gameActive) return;
+    if (victory) return;
 
+    
     if (moveLeft && !clawDropping && !clawRetracting) {
       claw.x = clawHitbox.x = Math.max(50, claw.x - 5);
     }
@@ -193,6 +334,7 @@ function create() {
       clawHitbox.y -= 3;
       if (claw.y <= 50) {
         clawRetracting = false;
+        startDropBlink(this);
       }
     }
 
@@ -215,63 +357,78 @@ function create() {
     child.destroy();
   });
 }
+
+function drawClawCable() {
+  if (!clawCable || !claw) return;
+
+  clawCable.clear();
+
+  // Cable style
+  //clawCable.lineStyle(2, 0x444444, 1); //option 1
+  //clawCable.lineStyle(5, 0x2b2b2b, 1); //option 2
+  clawCable.lineStyle(5, 0x2b2b2b, 0.9); //option 3
+
+  const startX = claw.x;
+  const startY = 0; // top of scene
+  const endX = claw.x;
+  //const endY = claw.y - 10; // attach slightly above claw
+const slack = clawDropping ? 0 : 6;
+const endY = claw.y - 10 + slack;
+  clawCable.beginPath();
+  clawCable.moveTo(startX, startY);
+  clawCable.lineTo(endX, endY);
+  clawCable.strokePath();
+}
+  
   function showVictoryScreen() {
     victory = true;
     this.add.image(400, 300, 'victoryBg').setDepth(21);
-    this.add.image(400, 220, 'prizeGif').setDepth(22).setScale(0.5).setOrigin(0.5);
-    this.add.text(400, 75, 'You Win!', {
+    this.add.text(400, 150, 'You Win!', {
       fontSize: '64px',
       color: '#fff'
     }).setOrigin(0.5).setDepth(22);
 
-    
-    const claimPrizeButton = this.add.text(400, 365, 'Mint Prize', {
+    const claimPrizeButton = this.add.text(400, 240, 'Mint Prize', {
       fontSize: '28px', backgroundColor: '#ff0', color: '#000', padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive().setDepth(22);
 
-    const mintButton = this.add.text(400, 425, 'NFT Collection', {
+    const mintButton = this.add.text(400, 300, 'Mint NFT', {
       fontSize: '32px',
       backgroundColor: '#fff',
       color: '#000',
       padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive().setDepth(22);
 
-    const restartButton = this.add.text(400, 485, 'Restart', {
+    const restartButton = this.add.text(400, 360, 'Restart', {
       fontSize: '28px', backgroundColor: '#ccc', color: '#000', padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive().setDepth(22);
 
+
     claimPrizeButton.on('pointerdown', async () => {
-  try {
-    if (typeof window.ethereum === 'undefined') {
-      alert("MetaMask is not detected. Please install MetaMask to continue.");
-      return;
-    }
+      try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+        await provider.send("eth_requestAccounts", []);
+        const signer = provider.getSigner();
+    
+        const contractAddress = "0xcaB543F6Af365a9E75f56e7Fc85D9C84F1482B12";
+        const abi = ["function mintPrize() public"];
+        const contract = new ethers.Contract(contractAddress, abi, signer);
+    
+        const tx = await contract.mintPrize();
+        console.log("Transaction sent:", tx.hash);
+    
+        await tx.wait();
+        alert("🎉 Prize minted successfully!");
+      } catch (err) {
+        console.error("Minting failed:", err);
+        if (err.code === 4001) {
+          alert("Transaction rejected by user.");
+        } else {
+          alert("Minting failed. See console for details.");
+        }
+      }
+    });
 
-    // Request account access and set provider/signer
-    const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-    await provider.send("eth_requestAccounts", []);
-    const signer = provider.getSigner();
-
-    const contractAddress = "0xcaB543F6Af365a9E75f56e7Fc85D9C84F1482B12";
-    const abi = ["function mintPrize() public"];
-
-    const contract = new ethers.Contract(contractAddress, abi, signer);
-
-    // Trigger mint
-    const tx = await contract.mintPrize();
-    console.log("Transaction sent:", tx.hash);
-
-    await tx.wait();
-    alert("🎉 Prize minted successfully!");
-  } catch (err) {
-    console.error("Minting failed:", err);
-    if (err.code === 4001) {
-      alert("Transaction rejected by user.");
-    } else {
-      alert("Minting failed. See console for details.");
-    }
-  }
-});
     mintButton.on('pointerdown', () => {
       window.open("https://opensea.io/collection/heartbones", '_blank');
       game.destroy(true);
@@ -283,6 +440,9 @@ function create() {
     });
   }
 </script>
-  
+<script type="module">
+  //import { mintPrizeNFT } from './walletconnect.js';
+  // now mintPrizeNFT is scoped locally, not global
+</script>
 </body>
 </html>
