@@ -387,7 +387,7 @@ const endY = claw.y - 10 + slack;
       fontSize: '64px',
       color: '#fff'
     }).setOrigin(0.5).setDepth(22);
-
+/*
     const claimPrizeButton = this.add.text(400, 240, 'Mint Prize', {
       fontSize: '28px', backgroundColor: '#ff0', color: '#000', padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive().setDepth(22);
@@ -398,12 +398,12 @@ const endY = claw.y - 10 + slack;
       color: '#000',
       padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive().setDepth(22);
-
+*/
     const restartButton = this.add.text(400, 360, 'Restart', {
       fontSize: '28px', backgroundColor: '#ccc', color: '#000', padding: { x: 10, y: 5 }
     }).setOrigin(0.5).setInteractive().setDepth(22);
 
-
+/*
     claimPrizeButton.on('pointerdown', async () => {
       try {
         const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
@@ -429,12 +429,13 @@ const endY = claw.y - 10 + slack;
       }
     });
 
+/*
     mintButton.on('pointerdown', () => {
       window.open("https://opensea.io/collection/heartbones", '_blank');
       game.destroy(true);
-      window.location.href = "https://www.funfartgames.com/thanks-for-playing";
+      window.location.href = "https://www.funfartgames.xyz";
     });
-
+*/
     restartButton.on('pointerdown', () => {
       location.reload();
     });
